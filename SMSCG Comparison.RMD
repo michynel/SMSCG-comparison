@@ -475,8 +475,8 @@ print(unique_station_names)
 
 
 
-## write csv of combined_df for saving?
-write.csv(combined_df, file = "C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/combined_data.csv", row.names = FALSE)
+#### write csv of combined_df for saving?
+###write.csv(combined_df, file = "C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/combined_data.csv", row.names = FALSE)
 ```
  #7 comparision 2018 GZL and GZB 
  
