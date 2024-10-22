@@ -1,0 +1,580 @@
+---
+title: "SMSCG Comparision"
+author: "Michelle Nelson"
+date: "2024-01-25"
+output: html_document
+---
+
+# Overview
+The goal of this comparison is to compare the two sets of sites that SMSCG uses to monitor the action plan. 
+The comparison will be between: Hunter Cut (HUN)vs Montezuma Buoy (GZM) and Grizzly Bay Buoy (GZB)vs Grizzly Bay Pile (GZL)
+
+#1. Load Libraries/ set WD
+```{r}
+install.packages("tidyverse")
+install.packages("readr")
+
+```
+
+
+```{r}
+library(tidyverse)
+library("ggpubr")
+library(lubridate)
+library(wql)
+library(RColorBrewer)
+library(cder)
+library(dplyr)
+library(readr)
+```
+
+#2 Load in data. Now I have 6 different data frames for all the data needed(4 years of comparisions with 2018 being on one 2 site comparision)
+```{r}
+########2018
+
+##GZL
+df_GZLediALL <- read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=edi.1177.5&entityid=bb661e9298f4c3c1aa3a875338c7c6a1")
+view(df_GZLediALL)
+##GZB
+dfGZB <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZB_data.csv")
+view(dfGZB)
+## the above 2 have no QC flags all good data
+######2021
+# GZB
+dfGZBfinal <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZB_final.csv")
+view(dfGZBfinal) ## does have QC flags need to filter for good data
+#GZL
+df_GZLediALL
+#HUN
+dfHUNALL <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/HUN_All.csv") 
+view(dfHUNALL) ## does have QC flags need to filter for good data
+# GZM
+DFGZMALL <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZM_All.csv")
+view (DFGZMALL)
+
+##### 2022
+#GZB 
+dfGZBfinal
+#GZL
+df_GZLediALL
+#HUN
+dfHUNALL
+#GZM
+DFGZMALL
+
+##### 2023
+#GZB
+dfGZBfinal
+#GZL
+df_GZL2023 <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZL_2023_data.csv")
+view(df_GZL2023) ### no flagged data all good
+#HUN
+dfHUNALL
+#GZM
+DFGZMALL
+
+```
+
+#3 reformat dates
+```{r}
+###GZL2018
+
+df_GZLediALL <- df_GZLediALL %>% mutate(date_time = paste(date, time)) %>% #combine the date and time columns
+  mutate(year = year(date_time)) #add a year column
+
+view(df_GZLediALL)## all good need to model all other dataframes like this one (column order, names, remove bad qcd data etc)
+
+
+###GZB2018
+df_GZBFINAL <- dfGZB
+
+### 2021 all 4 stations
+#dfGZBfinal <- dfGZBfinal %>%
+ # mutate(year = year(date_time)) ## this didnt work this is what cGPT said :I apologize for the confusion. If your date_time column is in a format that R recognizes, you should not use as.POSIXct with paste to convert it. It seems there might be an issue with how the date and time are represented in your original data.If your date_time column is in a character format and you need to parse it into a datetime object, you can use ymd_hms from the lubridate package, which handles parsing date-time strings in various formats.
+#dfGZBfinal <- dfGZBfinal %>%
+ # mutate(date_time = ymd_hms(date_time),
+  #       year = year(date_time)) ## more problems cGPT said to manually specify format
+
+#dfGZBfinal3yrs <- dfGZBfinal %>%
+ # mutate(date_time = as.POSIXct(date_time, format = '%m/%d/%Y %H:%M', tz = 'UTC'),
+  #       year = year(date_time)) ## didnt work checking colnames
+#colnames(dfGZBfinal)
+
+## trying this code to match column name
+dfGZBfinal3yrs <- dfGZBfinal %>%
+  mutate(DATETIME = as.POSIXct(DATETIME, format = '%m/%d/%Y %H:%M', tz = 'UTC'),
+         year = year(DATETIME))
+view(dfGZBfinal3yrs)
+
+
+## GZL already done for 2018, 2021, 2022 will need 2023 below
+
+##HUN
+dfHUNALL3 <- dfHUNALL %>%
+  mutate(DATETIME = as.POSIXct(DATETIME, format = '%m/%d/%Y %H:%M', tz = 'UTC'),
+         year = year(DATETIME)) ### this worked! just needed to see that the original datetime didnt have seconds and same column name
+View(dfHUNALL3)
+
+### GZM all years 21-23
+
+dfGZMALL3 <- DFGZMALL %>%
+  mutate(DATETIME = as.POSIXct(DATETIME, format = '%m/%d/%Y %H:%M', tz = 'UTC'),
+         year = year(DATETIME))
+view(dfGZMALL3)
+
+## last one needed dates cleaned GZL 2023, this one does have the seconds in the original datetime
+ 
+ df_GZL2023<- df_GZL2023 %>%
+ mutate(date_time = as.POSIXct(paste(date, time), format = '%m/%d/%Y %H:%M:%S')) %>%
+  mutate(year = year(date_time)) 
+ view(df_GZL2023)
+ ## now all dates should be the same so I can combine the full dataset later
+ df_GZBFINAL <- df_GZBFINAL %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+df_GZLediALL <-df_GZLediALL %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+df_GZL2023 <- df_GZL2023 %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+dfGZBfinal3yrs <- dfGZBfinal3yrs %>% mutate(DATETIME = as.POSIXct(DATETIME, format = "%Y-%m-%d %H:%M:%S"))
+dfGZMALL3 <- dfGZMALL3 %>% mutate(DATETIME = as.POSIXct(DATETIME, format = "%Y-%m-%d %H:%M:%S"))
+dfHUNALL3 <- dfHUNALL3 %>% mutate(DATETIME = as.POSIXct(DATETIME, format = "%Y-%m-%d %H:%M:%S"))
+
+view(df_GZBFINAL)
+## will need to rename datetime in last 3 to the same as first three above can do when cleaning data and ordering column names
+
+data <- data.frame(
+  x = c(1, 2, 3, 4, 5),
+  y = c(2, 3, 5, 7, 11)
+)
+plot <- ggplot(data, aes(x = x, y = y)) +
+  geom_point() +  # Add points
+  labs(title = "Example Scatter Plot",  # Add title
+       x = "X-axis Label",              # Add x-axis label
+       y = "Y-axis Label")              # Add y-axis label
+
+print(plot)
+```
+clean out bad data from WQA datasets
+-Replace all values that have Bad ("B" and "X") codes with NAs
+
+```{r}
+
+## from looking at the file it looks like all X code has NAs, should double check though somehow
+# three WQA datasets: 
+
+# dfGZBfinal3yrs
+colnames(dfGZBfinal3yrs)
+
+
+#check fluor first
+unique(dfGZBfinal3yrs$Chl...QAQC.Flag) ## has all 4 codes want to make sure first that there isnt a lot of unchecked data.
+## just showed me the flag types
+#Chl_a_ug_L_counts <- dfGZBfinal3yrs %>%
+ # group_by(Chl...QAQC.Flag) %>%
+  #summarise(NumDistinctFlags = n_distinct(Chl...QAQC.Flag))
+#View(Chl_a_ug_L_counts)
+
+Chl_a_ug_L_counts <- dfGZBfinal3yrs %>%
+  group_by(Chl...QAQC.Flag) %>%
+  summarise(NumOccurrences = n())
+view(Chl_a_ug_L_counts)
+
+#flourescence
+dfGZBfinal3yrs$Chl.a..µg.L. <- replace(dfGZBfinal3yrs$Chl.a..µg.L., dfGZBfinal3yrs$Chl...QAQC.Flag=="B", NA)
+dfGZBfinal3yrs$Chl.a..µg.L. <- replace(dfGZBfinal3yrs$Chl.a..µg.L., dfGZBfinal3yrs$Chl...QAQC.Flag=="X", NA)
+dfGZBfinal3yrs$Chl.a..µg.L. <- replace(dfGZBfinal3yrs$Chl.a..µg.L., dfGZBfinal3yrs$Chl...QAQC.Flag=="U", NA)
+
+#turbidity # the colnames are ridiculous should replace now but didnt
+dfGZBfinal3yrs$Turbidity..NTU. <- replace(dfGZBfinal3yrs$Turbidity..NTU., dfGZBfinal3yrs$Turbidity...QAQC.Flag=="B", NA)
+dfGZBfinal3yrs$Turbidity..NTU. <- replace(dfGZBfinal3yrs$Turbidity..NTU., dfGZBfinal3yrs$Turbidity...QAQC.Flag=="X", NA)
+dfGZBfinal3yrs$Turbidity..NTU. <- replace(dfGZBfinal3yrs$Turbidity..NTU., dfGZBfinal3yrs$Turbidity...QAQC.Flag=="U", NA)
+
+###Spc
+dfGZBfinal3yrs$SpCond..µS.cm. <- replace(dfGZBfinal3yrs$SpCond..µS.cm.,dfGZBfinal3yrs$SpCond...QAQC.Flag                                           =="B", NA)
+dfGZBfinal3yrs$SpCond..µS.cm. <- replace(dfGZBfinal3yrs$SpCond..µS.cm.,dfGZBfinal3yrs$SpCond...QAQC.Flag                                           =="X", NA)
+dfGZBfinal3yrs$SpCond..µS.cm. <- replace(dfGZBfinal3yrs$SpCond..µS.cm.,dfGZBfinal3yrs$SpCond...QAQC.Flag                                           =="U", NA)
+
+#### temp
+dfGZBfinal3yrs$Temp...C. <- replace(dfGZBfinal3yrs$Temp...C., dfGZBfinal3yrs$Temp...QAQC.Flag=="B", NA)
+dfGZBfinal3yrs$Temp...C. <- replace(dfGZBfinal3yrs$Temp...C., dfGZBfinal3yrs$Temp...QAQC.Flag=="X", NA)
+dfGZBfinal3yrs$Temp...C. <- replace(dfGZBfinal3yrs$Temp...C., dfGZBfinal3yrs$Temp...QAQC.Flag=="U", NA)
+
+
+### pH
+dfGZBfinal3yrs$pH <- replace(dfGZBfinal3yrs$pH, dfGZBfinal3yrs$pH...QAQC.Flag=="B", NA)
+dfGZBfinal3yrs$pH <- replace(dfGZBfinal3yrs$pH, dfGZBfinal3yrs$pH...QAQC.Flag=="X", NA)
+dfGZBfinal3yrs$pH <- replace(dfGZBfinal3yrs$pH, dfGZBfinal3yrs$pH...QAQC.Flag=="U", NA)
+### DO
+dfGZBfinal3yrs$DO..mg.L. <- replace(dfGZBfinal3yrs$DO..mg.L.,dfGZBfinal3yrs$DO...QAQC.Flag=="B", NA)
+dfGZBfinal3yrs$DO..mg.L. <- replace(dfGZBfinal3yrs$DO..mg.L.,dfGZBfinal3yrs$DO...QAQC.Flag=="X", NA)
+dfGZBfinal3yrs$DO..mg.L. <- replace(dfGZBfinal3yrs$DO..mg.L.,dfGZBfinal3yrs$DO...QAQC.Flag=="U", NA)
+
+#### DFGZMALL
+#temp
+dfGZMALL3$Temp...C. <- replace(dfGZMALL3$Temp...C., dfGZMALL3$Temp...QAQC.Flag=="B", NA)
+dfGZMALL3$Temp...C. <- replace(dfGZMALL3$Temp...C., dfGZMALL3$Temp...QAQC.Flag=="X", NA)
+dfGZMALL3$Temp...C. <- replace(dfGZMALL3$Temp...C., dfGZMALL3$Temp...QAQC.Flag=="U", NA)
+#spc
+dfGZMALL3$SpCond..µS.cm. <- replace(dfGZMALL3$SpCond..µS.cm., dfGZMALL3$SpCond...QAQC.Flag=="B", NA)
+dfGZMALL3$SpCond..µS.cm. <- replace(dfGZMALL3$SpCond..µS.cm., dfGZMALL3$SpCond...QAQC.Flag=="X", NA)
+dfGZMALL3$SpCond..µS.cm. <- replace(dfGZMALL3$SpCond..µS.cm., dfGZMALL3$SpCond...QAQC.Flag=="U", NA)
+#DO
+dfGZMALL3$DO..mg.L. <- replace(dfGZMALL3$DO..mg.L.,dfGZMALL3$DO...QAQC.Flag=="B", NA)
+dfGZMALL3$DO..mg.L. <- replace(dfGZMALL3$DO..mg.L.,dfGZMALL3$DO...QAQC.Flag=="X", NA)
+dfGZMALL3$DO..mg.L. <- replace(dfGZMALL3$DO..mg.L.,dfGZMALL3$DO...QAQC.Flag=="U", NA)
+#ph
+dfGZMALL3$pH <- replace(dfGZMALL3$pH, dfGZMALL3$pH...QAQC.Flag=="B", NA)
+dfGZMALL3$pH <- replace(dfGZMALL3$pH, dfGZMALL3$pH...QAQC.Flag=="X", NA)
+dfGZMALL3$pH <- replace(dfGZMALL3$pH, dfGZMALL3$pH...QAQC.Flag=="U", NA)
+#turb
+dfGZMALL3$Turbidity..NTU. <- replace(dfGZMALL3$Turbidity..NTU., dfGZMALL3$Turbidity...QAQC.Flag=="B", NA)
+dfGZMALL3$Turbidity..NTU. <- replace(dfGZMALL3$Turbidity..NTU., dfGZMALL3$Turbidity...QAQC.Flag=="X", NA)
+dfGZMALL3$Turbidity..NTU. <- replace(dfGZMALL3$Turbidity..NTU., dfGZMALL3$Turbidity...QAQC.Flag=="U", NA)
+#fluor
+dfGZMALL3$Chl.a..µg.L. <- replace(dfGZMALL3$Chl.a..µg.L., dfGZMALL3$Chl...QAQC.Flag=="B", NA)
+dfGZMALL3$Chl.a..µg.L. <- replace(dfGZMALL3$Chl.a..µg.L., dfGZMALL3$Chl...QAQC.Flag=="X", NA)
+dfGZMALL3$Chl.a..µg.L. <- replace(dfGZMALL3$Chl.a..µg.L., dfGZMALL3$Chl...QAQC.Flag=="U", NA)
+
+view(dfGZMALL3)
+
+selected_column <- 'Chl...QAQC.Flag'
+
+cat("Summary for", selected_column, ":\n")
+print(table(dfGZMALL3[[selected_column]]))
+#### just realized there is no B code for WQA annoying
+##HUNALL3
+#temp
+dfHUNALL3$Temp...C. <- replace(dfHUNALL3$Temp...C., dfHUNALL3$Temp...QAQC.Flag=="X", NA)
+dfHUNALL3$Temp...C. <- replace(dfHUNALL3$Temp...C., dfHUNALL3$Temp...QAQC.Flag=="U", NA)
+#spc
+dfHUNALL3$SpCond..µS.cm. <- replace(dfHUNALL3$SpCond..µS.cm., dfHUNALL3$SpCond...QAQC.Flag=="X", NA)
+dfHUNALL3$SpCond..µS.cm. <- replace(dfHUNALL3$SpCond..µS.cm., dfHUNALL3$SpCond...QAQC.Flag=="U", NA)
+##DO
+dfHUNALL3$DO..mg.L. <- replace(dfHUNALL3$DO..mg.L., dfHUNALL3$DO...QAQC.Flag=="X", NA)
+dfHUNALL3$DO..mg.L. <- replace(dfHUNALL3$DO..mg.L., dfHUNALL3$DO...QAQC.Flag=="U", NA)
+##ph
+dfHUNALL3$pH <- replace(dfHUNALL3$pH, dfHUNALL3$pH...QAQC.Flag=="X", NA)
+dfHUNALL3$pH <- replace(dfHUNALL3$pH, dfHUNALL3$pH...QAQC.Flag=="U", NA)
+##turb
+dfHUNALL3$Turbidity..NTU. <- replace(dfHUNALL3$Turbidity..NTU., dfHUNALL3$Turbidity...QAQC.Flag=="X", NA)
+dfHUNALL3$Turbidity..NTU. <- replace(dfHUNALL3$Turbidity..NTU., dfHUNALL3$Turbidity...QAQC.Flag=="U", NA)
+##fluor
+dfHUNALL3$Chl.a..µg.L. <- replace(dfHUNALL3$Chl.a..µg.L., dfHUNALL3$Chl...QAQC.Flag=="X", NA)
+dfHUNALL3$Chl.a..µg.L. <- replace(dfHUNALL3$Chl.a..µg.L., dfHUNALL3$Chl...QAQC.Flag=="U", NA)
+
+selected_column <- 'Chl...QAQC.Flag'
+
+cat("Summary for", selected_column, ":\n")
+print(table(dfHUNALL3[[selected_column]]))
+
+view(dfHUNALL3)
+```
+#5 should arrange colnames and take out slopes and QC flag columns
+
+```{r}
+### remove unwanted columns in WQA and rename to CEMP file column names
+colnames(dfHUNALL3)
+# Assuming 'dfHUNALL3', 'dfGZMALL3', and 'dfGZBfinal3years' are your DataFrames
+# Replace these with your actual DataFrames or load them from files
+
+# List of columns to be kept
+columns_to_keep <- c("STATION.NAME", "DATETIME", "DO..mg.L.", "SpCond..µS.cm.", "pH", "Temp...C.", "Turbidity..NTU.", "Chl.a..µg.L.")
+
+# Load the dplyr package if not already loaded
+# install.packages("dplyr")
+library(dplyr)
+
+# Function to keep specified columns in a dataframe and rename it
+keep_columns_and_rename <- function(df, columns, new_name_suffix) {
+  new_name <- paste0(deparse(substitute(df)), new_name_suffix)
+  return(assign(new_name, df %>% select(all_of(columns)), envir = .GlobalEnv))
+}
+
+# Keep specified columns in each dataframe and rename them
+dfHUNALL3F <- keep_columns_and_rename(dfHUNALL3, columns_to_keep, "F")
+dfGZMALL3F <- keep_columns_and_rename(dfGZMALL3, columns_to_keep, "F")
+dfGZBfinal3yrsF <- keep_columns_and_rename(dfGZBfinal3yrs, columns_to_keep, "F")
+
+
+```
+#6 rename colnames in WQA to match CEMP add date time year col
+
+```{r}
+# wanted column names
+colnames(df_GZL2023)
+# New column names
+new_column_names <- c("station", "date_time", "dissolvedoxygen", "spc", "ph", "watertemperature", "turbidity", "fluorescence")
+
+# Function to rename columns in a dataframe
+rename_columns <- function(df, new_names) {
+  colnames(df) <- new_names
+  return(df)
+}
+
+# Rename columns in each dataframe
+
+dfHUNALL3F <- rename_columns(dfHUNALL3F, new_column_names)
+dfGZMALL3F <- rename_columns(dfGZMALL3F, new_column_names)
+dfGZBfinal3yrsF <- rename_columns(dfGZBfinal3yrsF, new_column_names)
+
+## add date, time, year col to match CEMP
+
+library(dplyr)
+
+# Function to add new date, time, and year columns based on the DateTime column
+add_datetime_columns <- function(df) {
+  df <- df %>%
+    mutate(date = as.Date(date_time),
+           time = format(date_time, "%H:%M:%S"),
+           year = lubridate::year(date_time))
+  return(df)
+}
+
+# Add new date, time, and year columns to each dataframe
+dfHUNALL3F <- add_datetime_columns(dfHUNALL3F)
+dfGZMALL3F <- add_datetime_columns(dfGZMALL3F)
+dfGZBfinal3yrsF <- add_datetime_columns(dfGZBfinal3yrsF)
+
+
+```
+
+#7 make sure columns in same order
+```{r}
+
+
+# Reference order of columns
+reference_order <- c("date_time", "date", "time", "year", "station", "dissolvedoxygen", "spc", "ph", "watertemperature", "turbidity", "fluorescence")
+
+# Load the dplyr package if not already loaded
+# install.packages("dplyr")
+library(dplyr)
+
+# Function to rearrange columns in a dataframe based on reference order
+rearrange_columns <- function(df, reference_order) {
+  df <- select(df, all_of(reference_order))
+  return(df)
+}
+
+# Rearrange columns in each dataframe
+dfHUNALL3F <- rearrange_columns(dfHUNALL3F, reference_order)
+dfGZMALL3F <- rearrange_columns(dfGZMALL3F, reference_order)
+dfGZBfinal3yrsF <- rearrange_columns(dfGZBfinal3yrsF, reference_order)
+df_GZBFINAL <- rearrange_columns(dfGZB, reference_order)
+df_GZLediALL <- rearrange_columns(df_GZLediALL, reference_order)
+df_GZL2023 <- rearrange_columns(df_GZL2023, reference_order)
+
+
+### need to change WQA station names to acronyms
+
+## cant get this to work without adding a column dfHUNALL3F <- dfHUNALL3F %>%
+ ## mutate(station = if_else(station == "Hunter Cut", "HUN", station))
+
+
+```
+
+
+#8 combine all dataframes
+```{r}
+## make sure dates are all the same character type
+
+
+library(dplyr)
+
+
+library(lubridate)
+
+# Convert date_time columns to POSIXct type with consistent format and remove unwanted columns/ reorder the rest right after:
+
+df_GZBFINAL <- df_GZBFINAL %>% mutate(date_time = as.POSIXct(paste(date_time, "00:00:00"), format = "%Y-%m-%d %H:%M:%S")) #date
+df_GZBFINAL2 <- df_GZBFINAL %>%  select(-date, -time, -year) #removing columns
+str(df_GZBFINAL2)
+
+df_GZLediALL <- df_GZLediALL %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+df_GZLediALL2 <- df_GZLediALL %>%  select(-date, -time, -year) #removing columns
+str(df_GZLediALL2)
+
+
+df_GZL2023 <- df_GZL2023 %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+df_GZL20232 <- df_GZL2023 %>%  select(-date, -time, -year) #removing columns
+str(df_GZL20232)
+
+view(dfGZBfinal3yrsF)
+
+str(dfGZBfinal3yrsF)
+head(dfGZBfinal3yrsF)
+dfGZBfinal3yrs2 <- dfGZBfinal3yrsF %>% select(-date, -time, -year) ## wont run keeps making the new DF have no data
+
+## trying to kepp the columns I want. 
+dfGZBfinal3yrs2 <- dfGZBfinal3yrsF %>% select(date_time, station, dissolvedoxygen, spc, ph, turbidity, fluorescence)
+
+###STOPPED HERE CANT GET THESE UNWANTED COLUMNS OUT WITHOUT IT REMOVING EVERYTHING I HATE R
+#########################################################################################
+
+save.image(file = "SMSCG Comparison.RMD")
+
+
+dfGZMALL3F <- dfGZMALL3F %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+
+
+
+dfHUNALL3F <- dfHUNALL3F %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+
+# Ensure consistent time format
+df_GZBFINAL <- df_GZBFINAL %>% mutate(time = format(date_time, format = "%H:%M:%S"))
+str(df_GZBFINAL)
+df_GZLediALL <- df_GZLediALL %>% mutate(time = format(date_time, format = "%H:%M:%S"))
+df_GZL2023 <- df_GZL2023 %>% mutate(time = format(date_time, format = "%H:%M:%S"))
+dfGZBfinal3yrsF <- dfGZBfinal3yrsF %>% mutate(date_time = format(date_time, format = "%H:%M:%S"))
+dfGZMALL3F <- dfGZMALL3F %>% mutate(time = format(date_time, format = "%H:%M:%S"))
+dfHUNALL3F <- dfHUNALL3F %>% mutate(time = format(date_time, format = "%H:%M:%S"))
+
+
+
+
+
+# Combine the dataframes using bind_rows
+combined_df <- bind_rows(df_GZBFINAL, df_GZLediALL, df_GZL2023, dfGZBfinal3yrsF, dfGZMALL3F, dfHUNALL3F)
+
+## for whatever reason it wont combine because date columns arent right
+#
+str(df_GZBFINAL$date)
+df_GZBFINAL$date <- as.Date(df_GZBFINAL$date)
+str(df_GZL2023$date)
+
+#
+df_GZL2023$date <- as.Date(df_GZL2023$date)
+#
+str(dfGZBfinal3yrsF)
+str(dfGZMALL3F)
+str(dfHUNALL3F)
+
+view(combined_df)
+
+
+
+combined_df <- combined_df %>%
+  mutate(station = case_when(
+    station == "Grizzly Bay East" ~ "GZB",
+    station == "Montezuma Slough" ~ "GZM",
+    TRUE ~ station  # Keep the original value if it doesn't match any condition
+  ))
+## GZM didnt work but I just kept going with the long name
+
+## need to make sure CEMP and WQA names for each station are the same
+combined_df$station <- as.factor(combined_df$station)
+unique_station_names <- levels(combined_df$station)
+print(unique_station_names)
+
+
+
+## write csv of combined_df for saving?
+write.csv(combined_df, file = "C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/combined_data.csv", row.names = FALSE)
+```
+ #7 comparision 2018 GZL and GZB 
+ 
+```{r}
+
+
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+
+ggplot(dfGZB, aes (x = date_time, y= spc, color = station) + geom_line())
+
+# Assuming combined_df is your continuous water quality dataframe
+
+# Define the date range
+start_date <- as.POSIXct("2019-07-01 00:00:00")
+end_date <- as.POSIXct("2019-10-07 23:59:59")
+
+# Filter data within the specified date range and for the selected stations
+filtered_data <- combined_df %>%
+  filter(date_time >= start_date & date_time <= end_date &
+         station %in% c("GZB", "GZL"))
+
+# Calculate percent differences for selected columns
+percent_diff <- filtered_data %>%
+  group_by(date_time) %>%
+  summarize(
+    do_diff = (first(dissolvedoxygen)-last(dissolvedoxygen))/first(dissolvedoxygen),
+    spc_diff = (first(spc)-last(spc))/first(spc),
+    ph_diff = (first(ph)-last(ph))/first(ph),
+    temp_diff = (first(watertemperature)-last(watertemperature))/first(watertemperature),
+    turbidity_diff = (first(turbidity)-last(turbidity))/first(turbidity),
+    fluorescence_diff = (first(fluorescence)-last(fluorescence))/first(fluorescence)
+  )
+
+# Display the percent differences
+print(percent_diff)
+view(percent_diff)
+# Load the necessary library if not already loaded
+# install.packages("ggplot2")
+library(ggplot2)
+
+# Assuming percent_diff is the data frame containing percent differences
+
+# Melt the data for better plotting
+melted_data <- tidyr::gather(percent_diff, parameter, percent_diff, -date_time)
+
+view(melted_data)
+# Create a line plot
+ggplot(melted_data, aes(x = date_time, y = percent_diff,)) +
+  geom_line() +
+  facet_wrap(~parameter, scales = "free_y") +
+  labs(title = "Percent Differences Over Time",
+       x = "Datetime",
+       y = "Percent Difference") +
+  theme_minimal()
+
+
+### plot data with just both stations
+ggplot(combined_df, aes(x = date_time, y= watertemperature, color = station)) + geom_line()
+ggplot(combined_df, aes(x = date_time, y= spc, color = station)) + geom_line()
+
+
+### 
+gz = filter(combined_df, station%in%c("GZB", "GZL"))
+
+gz = mutate(gz, year = year(date_time)) %>% 
+  filter(!is.na(year))
+
+ggplot(gz, aes(x = date_time, y =watertemperature, color = station)) + geom_line() +facet_wrap(~year, scales = "free_x")
+
+ggplot(gz, aes(x = date_time, y =spc, color = station)) + geom_line() +facet_wrap(~year, scales = "free_x")
+```
+```{r}
+## plot absolute differences and zoom on time periods all exploratory plots, when you see signals like spc investigate what times of the time more likely to be different, times of the day, times of day for certain parameters and seasonally and then include when gate actions are in effects not
+
+```
+ trying absolute difference plots   
+ 
+```{r}
+
+#get absolute differences trying to mimic code from line 442
+
+# Calculate absolute differences
+absolute_diff <- filtered_data %>%
+  group_by(date_time) %>%
+  summarize(
+    do_diff = abs(first(dissolvedoxygen) - last(dissolvedoxygen)),
+    spc_diff = abs(first(spc) - last(spc)),
+    ph_diff = abs(first(ph) - last(ph)),
+    temp_diff = abs(first(watertemperature) - last(watertemperature)),
+    turbidity_diff = abs(first(turbidity) - last(turbidity)),
+    fluorescence_diff = abs(first(fluorescence) - last(fluorescence))
+  )
+
+
+print(absolute_diff)
+##not sure what melting the data does but did it before for 'better plotting' 
+melted_data_ab <- tidyr::gather(absolute_diff, parameter, absolute_diff, -date_time)
+view(melted_data_ab)
+
+
+#filter dataset for 1st gate action in 2018 one month before and after
+
+ggplot(absolute_diff, aes(x = date_time, y = spc_diff)) + geom_line()
+labs(title = "Percent Differences Over Time",
+       x = "Datetime",
+       y = "Absolute Difference") +
+  theme_minimal()
+```
+ 
+ 
