@@ -9,14 +9,12 @@ output: html_document
 The goal of this comparison is to compare the two sets of sites that SMSCG uses to monitor the action plan. 
 The comparison will be between: Hunter Cut (HUN)vs Montezuma Buoy (GZM) and Grizzly Bay Buoy (GZB)vs Grizzly Bay Pile (GZL)
 
-#1. Load Libraries/ set WD
+
 ```{r}
-install.packages("tidyverse")
-install.packages("readr")
 
 ```
 
-
+1. 
 ```{r}
 library(tidyverse)
 library("ggpubr")
@@ -26,52 +24,65 @@ library(RColorBrewer)
 library(cder)
 library(dplyr)
 library(readr)
+library(here)
+source(here("helpful_functions.R"))
 ```
 
 #2 Load in data. Now I have 6 different data frames for all the data needed(4 years of comparisions with 2018 being on one 2 site comparision)
 ```{r}
-########2018
 
-##GZL
-df_GZLediALL <- read_csv("https://portal.edirepository.org/nis/dataviewer?packageid=edi.1177.5&entityid=bb661e9298f4c3c1aa3a875338c7c6a1")
-view(df_GZLediALL)
-##GZB
-dfGZB <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZB_data.csv")
-view(dfGZB)
+
+dfGZLediALL <- get_edi_file(1177, "GZL")[[1]] 
+dfGZLediALL <- dfGZLediALL %>% filter(year(date)>=2018)
+
+dfGZBfinal <- abs_path_emp("Water Quality/SMSCG/GZB_final.csv")%>% read.csv(.)
+
+dfHUNALL <- abs_path_emp("Water Quality/SMSCG/HUN_All.csv")%>% read.csv(.)
+
+dfGZMALL <- abs_path_emp("Water Quality/SMSCG/GZM_All.csv")%>% read.csv(.)
+
+df_GZL2023 <- abs_path_emp("Water Quality/SMSCG/GZL_2023_data.csv")%>% read.csv(.)
+
+dfGZB <- abs_path_emp("Water Quality/SMSCG/GZB_data.csv")%>% read.csv(.)
+#GZB
+#dfGZB <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZB_data.csv")
+#view(dfGZB)
 ## the above 2 have no QC flags all good data
 ######2021
 # GZB
-dfGZBfinal <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZB_final.csv")
-view(dfGZBfinal) ## does have QC flags need to filter for good data
+#dfGZBfinal <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZB_final.csv")
+#view(dfGZBfinal) ## does have QC flags need to filter for good data
 #GZL
-df_GZLediALL
+#df_GZLediALL
 #HUN
-dfHUNALL <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/HUN_All.csv") 
-view(dfHUNALL) ## does have QC flags need to filter for good data
+#dfHUNALL <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/HUN_All.csv") 
+#view(dfHUNALL) ## does have QC flags need to filter for good data
 # GZM
-DFGZMALL <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZM_All.csv")
-view (DFGZMALL)
+#DFGZMALL <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZM_All.csv")
+#view (DFGZMALL)
 
 ##### 2022
 #GZB 
-dfGZBfinal
+#dfGZBfinal
 #GZL
-df_GZLediALL
+#df_GZLediALL
 #HUN
-dfHUNALL
+#dfHUNALL
 #GZM
-DFGZMALL
+#DFGZMALL
 
 ##### 2023
 #GZB
-dfGZBfinal
+#dfGZBfinal
 #GZL
-df_GZL2023 <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZL_2023_data.csv")
-view(df_GZL2023) ### no flagged data all good
+#df_GZL2023 <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZL_2023_data.csv")
+#view(df_GZL2023) ### no flagged data all good
 #HUN
-dfHUNALL
+#dfHUNALL
 #GZM
-DFGZMALL
+#DFGZMALL
+
+
 
 ```
 
