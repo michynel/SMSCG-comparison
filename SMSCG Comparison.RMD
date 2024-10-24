@@ -11,7 +11,7 @@ The comparison will be between: Hunter Cut (HUN)vs Montezuma Buoy (GZM) and Griz
 
 
 ```{r}
-
+### make sure you have the right libraries installed: tidyverse, etc
 ```
 
 1. 
@@ -30,7 +30,7 @@ source(here("helpful_functions.R"))
 
 #2 Load in data. Now I have 6 different data frames for all the data needed(4 years of comparisions with 2018 being on one 2 site comparision)
 ```{r}
-
+### Load in the data running these functions
 
 dfGZLediALL <- get_edi_file(1177, "GZL")[[1]] 
 dfGZLediALL <- dfGZLediALL %>% filter(year(date)>=2018)
@@ -44,6 +44,8 @@ dfGZMALL <- abs_path_emp("Water Quality/SMSCG/GZM_All.csv")%>% read.csv(.)
 df_GZL2023 <- abs_path_emp("Water Quality/SMSCG/GZL_2023_data.csv")%>% read.csv(.)
 
 dfGZB <- abs_path_emp("Water Quality/SMSCG/GZB_data.csv")%>% read.csv(.)
+
+## below is the old way that I pulled in the data
 #GZB
 #dfGZB <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZB_data.csv")
 #view(dfGZB)
@@ -90,14 +92,13 @@ dfGZB <- abs_path_emp("Water Quality/SMSCG/GZB_data.csv")%>% read.csv(.)
 ```{r}
 ###GZL2018
 
-df_GZLediALL <- df_GZLediALL %>% mutate(date_time = paste(date, time)) %>% #combine the date and time columns
+dfGZLediALL <- dfGZLediALL %>% mutate(date_time = paste(date, time)) %>% #combine the date and time columns
   mutate(year = year(date_time)) #add a year column
 
 view(df_GZLediALL)## all good need to model all other dataframes like this one (column order, names, remove bad qcd data etc)
 
 
-###GZB2018
-df_GZBFINAL <- dfGZB
+###GZB2018 is dfGZB
 
 ### 2021 all 4 stations
 #dfGZBfinal <- dfGZBfinal %>%
@@ -112,7 +113,7 @@ df_GZBFINAL <- dfGZB
 #colnames(dfGZBfinal)
 
 ## trying this code to match column name
-dfGZBfinal3yrs <- dfGZBfinal %>%
+dfGZBfinal3yrs <- dfGZBfinal %>% 
   mutate(DATETIME = as.POSIXct(DATETIME, format = '%m/%d/%Y %H:%M', tz = 'UTC'),
          year = year(DATETIME))
 view(dfGZBfinal3yrs)
@@ -128,10 +129,10 @@ View(dfHUNALL3)
 
 ### GZM all years 21-23
 
-dfGZMALL3 <- DFGZMALL %>%
+dfGZMALL3 <- dfGZMALL %>%
   mutate(DATETIME = as.POSIXct(DATETIME, format = '%m/%d/%Y %H:%M', tz = 'UTC'),
          year = year(DATETIME))
-view(dfGZMALL3)
+view(dfGZMALL)
 
 ## last one needed dates cleaned GZL 2023, this one does have the seconds in the original datetime
  
@@ -140,8 +141,8 @@ view(dfGZMALL3)
   mutate(year = year(date_time)) 
  view(df_GZL2023)
  ## now all dates should be the same so I can combine the full dataset later
- df_GZBFINAL <- df_GZBFINAL %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
-df_GZLediALL <-df_GZLediALL %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+ dfGZBfinal <- dfGZBfinal %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+dfGZLediALL <-dfGZLediALL %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
 df_GZL2023 <- df_GZL2023 %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
 dfGZBfinal3yrs <- dfGZBfinal3yrs %>% mutate(DATETIME = as.POSIXct(DATETIME, format = "%Y-%m-%d %H:%M:%S"))
 dfGZMALL3 <- dfGZMALL3 %>% mutate(DATETIME = as.POSIXct(DATETIME, format = "%Y-%m-%d %H:%M:%S"))
@@ -149,18 +150,8 @@ dfHUNALL3 <- dfHUNALL3 %>% mutate(DATETIME = as.POSIXct(DATETIME, format = "%Y-%
 
 view(df_GZBFINAL)
 ## will need to rename datetime in last 3 to the same as first three above can do when cleaning data and ordering column names
+## not sure if this was done later or not...
 
-data <- data.frame(
-  x = c(1, 2, 3, 4, 5),
-  y = c(2, 3, 5, 7, 11)
-)
-plot <- ggplot(data, aes(x = x, y = y)) +
-  geom_point() +  # Add points
-  labs(title = "Example Scatter Plot",  # Add title
-       x = "X-axis Label",              # Add x-axis label
-       y = "Y-axis Label")              # Add y-axis label
-
-print(plot)
 ```
 clean out bad data from WQA datasets
 -Replace all values that have Bad ("B" and "X") codes with NAs
@@ -182,12 +173,12 @@ unique(dfGZBfinal3yrs$Chl...QAQC.Flag) ## has all 4 codes want to make sure firs
   #summarise(NumDistinctFlags = n_distinct(Chl...QAQC.Flag))
 #View(Chl_a_ug_L_counts)
 
-Chl_a_ug_L_counts <- dfGZBfinal3yrs %>%
-  group_by(Chl...QAQC.Flag) %>%
-  summarise(NumOccurrences = n())
-view(Chl_a_ug_L_counts)
+##Chl_a_ug_L_counts <- dfGZBfinal3yrs %>%
+#  group_by(Chl...QAQC.Flag) %>%
+ # summarise(NumOccurrences = n())
+#view(Chl_a_ug_L_counts)
 
-#flourescence
+#flourescence changing all B,X and U flags to NAs
 dfGZBfinal3yrs$Chl.a..µg.L. <- replace(dfGZBfinal3yrs$Chl.a..µg.L., dfGZBfinal3yrs$Chl...QAQC.Flag=="B", NA)
 dfGZBfinal3yrs$Chl.a..µg.L. <- replace(dfGZBfinal3yrs$Chl.a..µg.L., dfGZBfinal3yrs$Chl...QAQC.Flag=="X", NA)
 dfGZBfinal3yrs$Chl.a..µg.L. <- replace(dfGZBfinal3yrs$Chl.a..µg.L., dfGZBfinal3yrs$Chl...QAQC.Flag=="U", NA)
@@ -367,13 +358,13 @@ rearrange_columns <- function(df, reference_order) {
 dfHUNALL3F <- rearrange_columns(dfHUNALL3F, reference_order)
 dfGZMALL3F <- rearrange_columns(dfGZMALL3F, reference_order)
 dfGZBfinal3yrsF <- rearrange_columns(dfGZBfinal3yrsF, reference_order)
-df_GZBFINAL <- rearrange_columns(dfGZB, reference_order)
-df_GZLediALL <- rearrange_columns(df_GZLediALL, reference_order)
+dfGZBFINAL <- rearrange_columns(dfGZB, reference_order)
+dfGZLediALL <- rearrange_columns(dfGZLediALL, reference_order)
 df_GZL2023 <- rearrange_columns(df_GZL2023, reference_order)
 
 
 ### need to change WQA station names to acronyms
-
+## never did this
 ## cant get this to work without adding a column dfHUNALL3F <- dfHUNALL3F %>%
  ## mutate(station = if_else(station == "Hunter Cut", "HUN", station))
 
@@ -422,8 +413,6 @@ save.image(file = "SMSCG Comparison.RMD")
 
 
 dfGZMALL3F <- dfGZMALL3F %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
-
-
 
 dfHUNALL3F <- dfHUNALL3F %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
 
