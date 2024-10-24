@@ -45,6 +45,17 @@ df_GZL2023 <- abs_path_emp("Water Quality/SMSCG/GZL_2023_data.csv")%>% read.csv(
 
 dfGZB <- abs_path_emp("Water Quality/SMSCG/GZB_data.csv")%>% read.csv(.)
 
+
+### tried this code got an error: GZB_2024 <- abs_path_emp("Water Quality/SMSCG/GZB_2024.csv")%>% read.csv(.)
+
+#got from chat gpt didnt work #GZB_2024 <- abs_path_emp("Water Quality/SMSCG/GZB_2024.csv") %>% 
+#  read.csv(., fileEncoding = "UTF-8")
+###GZB_2024 <- abs_path_emp("Water Quality/SMSCG/GZB_2024.csv") %>% 
+  ##read.csv(., fileEncoding = "latin1")
+
+## read in but long view not wide view vivian will work on separately and then we will read the file back in later. 
+
+
 ## below is the old way that I pulled in the data
 #GZB
 #dfGZB <- read.csv("C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/GZB_data.csv")
@@ -95,7 +106,7 @@ dfGZB <- abs_path_emp("Water Quality/SMSCG/GZB_data.csv")%>% read.csv(.)
 dfGZLediALL <- dfGZLediALL %>% mutate(date_time = paste(date, time)) %>% #combine the date and time columns
   mutate(year = year(date_time)) #add a year column
 
-view(df_GZLediALL)## all good need to model all other dataframes like this one (column order, names, remove bad qcd data etc)
+view(dfGZLediALL)## all good need to model all other dataframes like this one (column order, names, remove bad qcd data etc)
 
 
 ###GZB2018 is dfGZB
@@ -384,12 +395,12 @@ library(lubridate)
 
 # Convert date_time columns to POSIXct type with consistent format and remove unwanted columns/ reorder the rest right after:
 
-df_GZBFINAL <- df_GZBFINAL %>% mutate(date_time = as.POSIXct(paste(date_time, "00:00:00"), format = "%Y-%m-%d %H:%M:%S")) #date
-df_GZBFINAL2 <- df_GZBFINAL %>%  select(-date, -time, -year) #removing columns
-str(df_GZBFINAL2)
+dfGZBFINAL <- dfGZBFINAL %>% mutate(date_time = as.POSIXct(paste(date_time, "00:00:00"), format = "%Y-%m-%d %H:%M:%S")) #date
+dfGZBFINAL2 <- dfGZBFINAL %>%  select(-date, -time, -year) #removing columns
+str(dfGZBFINAL2)
 
-df_GZLediALL <- df_GZLediALL %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
-df_GZLediALL2 <- df_GZLediALL %>%  select(-date, -time, -year) #removing columns
+dfGZLediALL <- dfGZLediALL %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+dfGZLediALL2 <- dfGZLediALL %>%  select(-date, -time, -year) #removing columns
 str(df_GZLediALL2)
 
 
@@ -397,70 +408,60 @@ df_GZL2023 <- df_GZL2023 %>% mutate(date_time = as.POSIXct(date_time, format = "
 df_GZL20232 <- df_GZL2023 %>%  select(-date, -time, -year) #removing columns
 str(df_GZL20232)
 
-view(dfGZBfinal3yrsF)
 
 str(dfGZBfinal3yrsF)
 head(dfGZBfinal3yrsF)
 dfGZBfinal3yrs2 <- dfGZBfinal3yrsF %>% select(-date, -time, -year) ## wont run keeps making the new DF have no data
-
 ## trying to kepp the columns I want. 
 dfGZBfinal3yrs2 <- dfGZBfinal3yrsF %>% select(date_time, station, dissolvedoxygen, spc, ph, turbidity, fluorescence)
+dfGZBfinal3yrs2<- dfGZBfinal3yrs2 %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
 
-###STOPPED HERE CANT GET THESE UNWANTED COLUMNS OUT WITHOUT IT REMOVING EVERYTHING I HATE R
-#########################################################################################
+
+###
+dfGZMALL3F <- dfGZMALL3F %>% select(-date, -time, -year)
+dfGZMALL3F <- dfGZMALL3F %>% select(date_time, station, dissolvedoxygen, spc, ph, turbidity, fluorescence)
+dfGZMALL3F <- dfGZMALL3F %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+
+####
+
+dfHUNALL3F <- dfHUNALL3F %>% select(-date, -time, -year)
+dfHUNALL3F <- dfHUNALL3F %>% select(date_time, station, dissolvedoxygen, spc, ph, turbidity, fluorescence)
+dfHUNALL3F <- dfHUNALL3F %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
 
 save.image(file = "SMSCG Comparison.RMD")
 
 
-dfGZMALL3F <- dfGZMALL3F %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+##dfGZMALL3F <- dfGZMALL3F %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
 
-dfHUNALL3F <- dfHUNALL3F %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+##dfHUNALL3F <- dfHUNALL3F %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
 
 # Ensure consistent time format
-df_GZBFINAL <- df_GZBFINAL %>% mutate(time = format(date_time, format = "%H:%M:%S"))
-str(df_GZBFINAL)
-df_GZLediALL <- df_GZLediALL %>% mutate(time = format(date_time, format = "%H:%M:%S"))
-df_GZL2023 <- df_GZL2023 %>% mutate(time = format(date_time, format = "%H:%M:%S"))
-dfGZBfinal3yrsF <- dfGZBfinal3yrsF %>% mutate(date_time = format(date_time, format = "%H:%M:%S"))
-dfGZMALL3F <- dfGZMALL3F %>% mutate(time = format(date_time, format = "%H:%M:%S"))
-dfHUNALL3F <- dfHUNALL3F %>% mutate(time = format(date_time, format = "%H:%M:%S"))
+#df_GZBFINAL <- df_GZBFINAL %>% mutate(time = format(date_time, format = "%H:%M:%S"))
+#str(df_GZBFINAL)
+#df_GZLediALL <- df_GZLediALL %>% mutate(time = format(date_time, format = "%H:%M:%S"))
+#df_GZL2023 <- df_GZL2023 %>% mutate(time = format(date_time, format = "%H:%M:%S"))
+#dfGZBfinal3yrsF <- dfGZBfinal3yrsF %>% mutate(date_time = format(date_time, format = "%H:%M:%S"))
+#dfGZMALL3F <- dfGZMALL3F %>% mutate(time = format(date_time, format = "%H:%M:%S"))
+#dfHUNALL3F <- dfHUNALL3F %>% mutate(time = format(date_time, format = "%H:%M:%S"))
 
 
 
 
 
 # Combine the dataframes using bind_rows
-combined_df <- bind_rows(df_GZBFINAL, df_GZLediALL, df_GZL2023, dfGZBfinal3yrsF, dfGZMALL3F, dfHUNALL3F)
+combined_df <- bind_rows(dfGZBFINAL2, dfGZLediALL2, df_GZL20232, dfGZBfinal3yrs2, dfGZMALL3F, dfHUNALL3F)
 
-## for whatever reason it wont combine because date columns arent right
-#
-str(df_GZBFINAL$date)
-df_GZBFINAL$date <- as.Date(df_GZBFINAL$date)
-str(df_GZL2023$date)
-
-#
-df_GZL2023$date <- as.Date(df_GZL2023$date)
-#
-str(dfGZBfinal3yrsF)
-str(dfGZMALL3F)
-str(dfHUNALL3F)
-
-view(combined_df)
+###### YAY IT WORKED
 
 
-
-combined_df <- combined_df %>%
-  mutate(station = case_when(
-    station == "Grizzly Bay East" ~ "GZB",
-    station == "Montezuma Slough" ~ "GZM",
-    TRUE ~ station  # Keep the original value if it doesn't match any condition
-  ))
+##combined_df <- combined_df %>%
+ ## mutate(station = case_when(
+  ##  station == "Grizzly Bay East" ~ "GZB",
+  ##  station == "Montezuma Slough" ~ "GZM",
+    ##TRUE ~ station  # Keep the original value if it doesn't match any condition
+  ##))
 ## GZM didnt work but I just kept going with the long name
 
-## need to make sure CEMP and WQA names for each station are the same
-combined_df$station <- as.factor(combined_df$station)
-unique_station_names <- levels(combined_df$station)
-print(unique_station_names)
 
 
 
@@ -470,14 +471,49 @@ print(unique_station_names)
  #7 comparision 2018 GZL and GZB 
  
 ```{r}
-
-
 library(dplyr)
 library(lubridate)
 library(ggplot2)
 
-ggplot(dfGZB, aes (x = date_time, y= spc, color = station) + geom_line())
+str(combined_df)
 
+filtered_dataGZL <- combined_df %>% 
+  filter(station == "GZL",
+         date_time >=as.Date("2018-07-01"),
+         date_time<=as.Date("2018-10-06"))
+
+
+  
+ggplot(data = filtered_dataGZL, aes(x = date_time, y = spc )) + geom_line(color = "red") + labs(title = "GZL Specific conductivity gate action 2018", 
+                                 x = "Date", y = "Specific Conductivity") + theme_minimal()
+```
+```{r}
+ggplot(data = filtered_dataGZL, aes(x = date_time, y = watertemperature )) + geom_line(color = "blue") + labs(title = "GZL Water Temperature gate action 2018", 
+                                 x = "Date", y = "Water Temperature") + theme_minimal()
+
+```
+```{r}
+### lets see what the two sites look like plotted together
+
+filtered_dataGZLGZB <- combined_df %>% 
+  filter(station == c("GZL", "GZB"),
+         date_time >=as.Date("2018-07-01"),
+         date_time <=as.Date("2018-10-06"))
+
+
+  
+ggplot(data = filtered_dataGZLGZB, aes(x = date_time, y = spc, color = station )) + geom_line() +geom_point() + labs(title = "GZL and GZB Specific conductivity gate action 2018", x = "Date", y = "Specific Conductivity", color = "Station") + theme_minimal()
+
+
+ggplot(data = filtered_dataGZLGZB, aes(x = date_time, y = spc, color = station )) + geom_line() + labs(title = "GZL and GZB Specific conductivity gate action 2018", x = "Date", y = "Specific Conductivity", color = "Station") + theme_minimal()
+
+###decided to put all comparision sites together on plots per parameter below is working code, may want to just smooth out the line and tweak the way the plots look but continue to
+
+###ENDED HERE didnt look at any code past this
+```
+
+
+```{r}
 # Assuming combined_df is your continuous water quality dataframe
 
 # Define the date range
