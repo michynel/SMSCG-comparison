@@ -167,7 +167,7 @@ view(df_GZBFINAL)
 ## not sure if this was done later or not...
 
 ```
-clean out bad data from WQA datasets
+#4 clean out bad data from WQA datasets
 -Replace all values that have Bad ("B" and "X") codes with NAs
 
 ```{r}
@@ -192,7 +192,16 @@ unique(dfGZBfinal3yrs$Chl...QAQC.Flag) ## has all 4 codes want to make sure firs
  # summarise(NumOccurrences = n())
 #view(Chl_a_ug_L_counts)
 
-#flourescence changing all B,X and U flags to NAs
+#flourescence changing all B,X and U flags to NAs ####THIS WORKED REPLACING VALUES WITH NA
+
+dfGZBfinal3yrs <- dfGZBfinal3yrs %>%
+  mutate(across(everything(), ~ifelse(Chl.SOP.Process.QC.Flag %in% c('U', 'X', 'M', 'B'), NA, .)))
+
+
+summary(dfGZBfinal3yrs)
+
+
+
 dfGZBfinal3yrs$Chl.a..µg.L. <- replace(dfGZBfinal3yrs$Chl.a..µg.L., dfGZBfinal3yrs$Chl...QAQC.Flag=="B", NA)
 dfGZBfinal3yrs$Chl.a..µg.L. <- replace(dfGZBfinal3yrs$Chl.a..µg.L., dfGZBfinal3yrs$Chl...QAQC.Flag=="X", NA)
 dfGZBfinal3yrs$Chl.a..µg.L. <- replace(dfGZBfinal3yrs$Chl.a..µg.L., dfGZBfinal3yrs$Chl...QAQC.Flag=="U", NA)
@@ -467,17 +476,20 @@ combined_df <- bind_rows(dfGZBFINAL2, dfGZLediALL2, df_GZL20232, dfGZBfinal3yrs2
 
 ###### YAY IT WORKED
 
+###Now I want to rename the station
 
-##combined_df <- combined_df %>%
- ## mutate(station = case_when(
-  ##  station == "Grizzly Bay East" ~ "GZB",
-  ##  station == "Montezuma Slough" ~ "GZM",
-    ##TRUE ~ station  # Keep the original value if it doesn't match any condition
-  ##))
-## GZM didnt work but I just kept going with the long name
+unique(combined_df$station)
 
+# Rename specific stations
+combined_df <- combined_df %>%
+  mutate(station = case_when(
+    station == "Grizzly Bay East" ~ "GZB",
+    station == "Montezuma Slough Mouth" ~ "GZM",
+    station == "Hunter Cut" ~ "HUN",
+    TRUE ~ station  # Keep other stations unchanged
+  ))
 
-
+unique(combined_df$station)
 
 #### write csv of combined_df for saving?
 ###write.csv(combined_df, file = "C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/combined_data.csv", row.names = FALSE)
@@ -529,8 +541,170 @@ ggplot(data = filtered_dataGZLGZB, aes(x = date_time, y = spc, color = station )
 ```
 
 
+#11 QQPLOTS per parameter for each station
+
+```{r}
+# Load ggplot2 library
+library(ggplot2)
+### in order to do QQplots/facet_grid I need to reshape the data into long format
+library(tidyr)
+
+# Reshaping data to long format
+combined_df_long <- combined_df %>%
+  pivot_longer(
+    cols = c(dissolvedoxygen, spc, ph, watertemperature, turbidity, fluorescence),
+    names_to = "Parameter",
+    values_to = "Value"
+  )
+
+###missing or NA values
+combined_df_long <- na.omit(combined_df_long)
 
 
+
+# Generate QQ Plots
+
+## overall ggplot(combined_df_long, aes(sample = Value)) + 
+##  stat_qq() +
+  ##stat_qq_line(color = "red") +
+  ##facet_grid(Parameter ~ station) +  # Rows: Parameters, Columns: Stations
+  ##labs(
+    ##title = "QQ Plots for Water Quality Data",
+  #  x = "Theoretical Quantiles",
+   # y = "Sample Quantiles"
+  #) +
+  #theme_minimal()
+
+##above was comparing to all parameters to all parameters need to do individual parameters
+## at all stations
+
+
+
+#DO
+# Assuming 'combined_df_long' is your long-format dataframe
+parameter_to_plot <- "dissolvedoxygen"  # Replace with your desired parameter
+
+# Subset the data for the chosen parameter
+subset_dfDO <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
+
+# Generate QQ plots for the chosen parameter across all stations
+(ggplot(subset_dfDO, aes(sample = Value)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  facet_wrap(~station, scales = "free") +  # One plot per station
+  labs(
+    title = paste("QQ Plots for", parameter_to_plot),
+    x = "Theoretical Quantiles",
+    y = "Sample Quantiles"
+  ) +
+  theme_minimal())
+unique(subset_dfDO$station)
+
+##SPC
+parameter_to_plot <- "spc"
+subset_dfspc <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
+(ggplot(subset_dfspc, aes(sample = Value)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  facet_wrap(~station, scales = "free") +  # One plot per station
+  labs(
+    title = paste("QQ Plots for", parameter_to_plot),
+    x = "Theoretical Quantiles",
+    y = "Sample Quantiles"
+  ) +
+  theme_minimal())
+unique(subset_dfDO$station)
+
+
+#ph
+parameter_to_plot <- "ph"
+subset_dfph <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
+(ggplot(subset_dfph, aes(sample = Value)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  facet_wrap(~station, scales = "free") +  # One plot per station
+  labs(
+    title = paste("QQ Plots for", parameter_to_plot),
+    x = "Theoretical Quantiles",
+    y = "Sample Quantiles"
+  ) +
+  theme_minimal())
+
+#fluor
+parameter_to_plot <- "fluorescence"
+subset_dfflu <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
+(ggplot(subset_dfflu, aes(sample = Value)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  facet_wrap(~station, scales = "free") +  # One plot per station
+  labs(
+    title = paste("QQ Plots for", parameter_to_plot),
+    x = "Theoretical Quantiles",
+    y = "Sample Quantiles"
+  ) +
+  theme_minimal())
+
+
+##turb
+parameter_to_plot <- "turbidity"
+subset_dfturb <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
+(ggplot(subset_dfflu, aes(sample = Value)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  facet_wrap(~station, scales = "free") +  # One plot per station
+  labs(
+    title = paste("QQ Plots for", parameter_to_plot),
+    x = "Theoretical Quantiles",
+    y = "Sample Quantiles"
+  ) +
+  theme_minimal())
+
+#water temp -keeps taking out two stations
+parameter_to_plot <- "watertemperature"
+subset_dfWT <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
+(ggplot(subset_dfflu, aes(sample = Value)) +
+  stat_qq() +
+  stat_qq_line(color = "red") +
+  facet_wrap(~station, scales = "free") +  # One plot per station
+  labs(
+    title = paste("QQ Plots for", parameter_to_plot),
+    x = "Theoretical Quantiles",
+    y = "Sample Quantiles"
+  ) +
+  theme_minimal())
+
+
+
+## here is a code for all do not like the scale though
+# Parameters to compare
+parameters <- c("dissolvedoxygen", "watertemperature", "turbidity", "ph", "spc", "fluorescence")  # List of parameters to plot
+
+# Create a list of plots for each parameter
+plots <- lapply(parameters, function(param) {
+  # Subset data for each parameter
+  subset_df <- combined_df_long[combined_df_long$Parameter == param, ]
+  
+  # Generate QQ plots for the chosen parameter across all stations
+  ggplot(subset_df, aes(sample = Value)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", param),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+})
+
+# Combine all the plots into a single grid for easy viewing
+library(gridExtra)
+do.call(grid.arrange, c(plots, ncol = 2))  # Adjust 'ncol' as needed
+
+
+
+
+```
 
 
 
