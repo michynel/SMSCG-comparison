@@ -12,6 +12,7 @@ The comparison will be between: Hunter Cut (HUN)vs Montezuma Buoy (GZM) and Griz
 
 ```{r}
 ### make sure you have the right libraries installed: tidyverse, etc
+#install.packages("svglite")
 ```
 1. libraries 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, eval=FALSE}
@@ -19,7 +20,7 @@ The comparison will be between: Hunter Cut (HUN)vs Montezuma Buoy (GZM) and Griz
 
 knitr::opts_chunk$set(fig.show = "hide")
 
-
+library(svglite)
 library(tidyverse)
 library("ggpubr")
 library(lubridate)
@@ -293,7 +294,7 @@ dfGZBfinal3yrsF <- keep_columns_and_rename(dfGZBfinal3yrs, columns_to_keep, "F")
 
 ```{r}
 # wanted column names
-colnames(df_GZL2023)
+#colnames(df_GZL2023)
 # New column names
 new_column_names <- c("station", "date_time", "dissolvedoxygen", "spc", "ph", "watertemperature", "turbidity", "fluorescence")
 
@@ -373,17 +374,19 @@ GZB24 <- abs_path_emp("Water Quality/SMSCG/GZB_2024_CLEANED DATA.csv")%>% read.c
 HUN24 <- abs_path_emp("Water Quality/SMSCG/HUN_2024_CLEANED DATA.csv")%>% read.csv(.)
 GZL24 <- abs_path_emp("Water Quality/SMSCG/GZL_2024_CLEANED DATA.csv")%>% read.csv(.)
 
-#make sure dates are in the correct format
-
-# Convert the Date.Time column to POSIXct format with seconds
-# List of data frames
+# Ensure the Date.Time column is correctly formatted
 data_frames <- list(GZB24 = GZB24, GZM24 = GZM24, HUN24 = HUN24, GZL24 = GZL24)
 
-# Add seconds and convert Date.Time for each data frame
+# Add seconds and convert Date.Time to POSIXct
 data_frames <- lapply(data_frames, function(df) {
+  if (!"Date.Time" %in% colnames(df)) {
+    stop("Column 'Date.Time' not found in one or more data frames.")
+  }
+  
   # Append seconds if missing
   df$Date.Time <- paste0(df$Date.Time, ":00")
-  # Convert to POSIXct
+  
+  # Convert from the modified format to the desired format
   df$Date.Time <- as.POSIXct(df$Date.Time, format = "%m/%d/%Y %H:%M:%S", tz = "UTC")
   return(df)
 })
@@ -393,6 +396,82 @@ GZB24 <- data_frames$GZB24
 GZM24 <- data_frames$GZM24
 HUN24 <- data_frames$HUN24
 GZL24 <- data_frames$GZL24
+
+# Check the conversion
+lapply(data_frames, function(df) head(df$Date.Time))
+
+#need matching colnames and station column
+
+
+#change colnames
+# Define the mapping of old column names to new column names
+column_mapping <- c(
+  "Date.Time" = "date_time",
+  "Dissolved.Oxygen" = "dissolvedoxygen",
+  "Specific.Conductance" = "spc",
+  "Chlorophyll" = "fluorescence",
+  "Turbidity" = "turbidity",
+  "Water.Temperature" = "watertemperature",
+  "pH" = "ph"
+)
+
+# Safely rename columns before adding the station column
+GZB24 <- GZB24 %>%
+  rename(
+    date_time = Date.Time,
+    dissolvedoxygen = Dissolved.Oxygen,
+    spc = Specific.Conductance,
+    fluorescence = Chlorophyll,
+    turbidity = Turbidity,
+    watertemperature = Water.Temperature,
+    ph = pH
+  ) %>%
+  mutate(station = "GZB")
+
+GZM24 <- GZM24 %>%
+  rename(
+    date_time = Date.Time,
+    dissolvedoxygen = Dissolved.Oxygen,
+    spc = Specific.Conductance,
+    fluorescence = Chlorophyll,
+    turbidity = Turbidity,
+    watertemperature = Water.Temperature,
+    ph = pH
+  ) %>%
+  mutate(station = "GZM")
+colnames(HUN24)
+HUN24 <- HUN24 %>%
+  rename(
+    date_time = Date.Time,
+    dissolvedoxygen = Dissolved.Oxygen,
+    spc = Specific.Conductance,
+    fluorescence = Chlorophyll,
+    turbidity = Turbidity,
+    watertemperature = Water.Temperature,
+    ph = pH
+  ) %>%
+  mutate(station = "HUN")
+
+GZL24 <- GZL24 %>%
+  rename(
+    date_time = Date.Time,
+    dissolvedoxygen = Dissolved.Oxygen,
+    spc = Specific.Conductance,
+    fluorescence = Chlorophyll,
+    turbidity = Turbidity,
+    watertemperature = Water.Temperature,
+    ph = pH
+  ) %>%
+  mutate(station = "GZL")
+
+# Combine all the dataframes into one
+combined_df24 <- bind_rows(GZB24, GZM24, HUN24, GZL24)
+
+# Check the final column names
+colnames(combined_df24)
+
+##### need to run the NA code
+
 ```
 
 
@@ -413,14 +492,14 @@ dfGZBFINAL <- dfGZBFINAL %>% mutate(date_time = as.POSIXct(paste(date_time, "00:
 dfGZBFINAL2 <- dfGZBFINAL %>%  select(-date, -time, -year) #removing columns
 str(dfGZBFINAL2)
 
-dfGZLediALL <- dfGZLediALL %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+dfGZLediALL <- dfGZLediALL %>% mutate(date_time = as.POSIXct(date_time, format = " %H:%M:%S"))
 dfGZLediALL2 <- dfGZLediALL %>%  select(-date, -time, -year) #removing columns
 
 
 
-df_GZL2023 <- df_GZL2023 %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
-df_GZL20232 <- df_GZL2023 %>%  select(-date, -time, -year) #removing columns
-str(df_GZL20232)
+## dont need anymore df_GZL2023 <- df_GZL2023 %>% mutate(date_time = as.POSIXct(date_time, format = "%Y-%m-%d %H:%M:%S"))
+#df_GZL20232 <- df_GZL2023 %>%  select(-date, -time, -year) #removing columns
+#str(df_GZL20232)
 
 
 str(dfGZBfinal3yrsF)
@@ -446,7 +525,7 @@ dfHUNALL3F <- dfHUNALL3F %>% mutate(date_time = as.POSIXct(date_time, format = "
 
 
 # Combine the dataframes using bind_rows
-combined_df <- bind_rows(dfGZBFINAL2, dfGZLediALL2, df_GZL20232, dfGZBfinal3yrs2, dfGZMALL3F, dfHUNALL3F)
+combined_df <- bind_rows(dfGZBFINAL2, dfGZLediALL2, dfGZBfinal3yrs2, dfGZMALL3F, dfHUNALL3F)
 str(combined_df)
 ###### YAY IT WORKED
 
@@ -465,8 +544,21 @@ combined_df <- combined_df %>%
 
 unique(combined_df$station)
 
-#### write csv of combined_df for saving?
-###write.csv(combined_df, file = "C:/Users/nelsonm/OneDrive - California Department of Water Resources/R/SMSCG Comparision/combined_data.csv", row.names = FALSE)
+### okay now I need to combine the combined_df with combined_df24 while reordering the column names
+# Reorder the columns in existing_df to match the column order of combined_df
+combined_df <- combined_df %>%
+  select(date_time, station, dissolvedoxygen, spc, ph, watertemperature, turbidity, fluorescence)
+
+# Now combine the dataframes
+combined_df <- bind_rows(combined_df24, combined_df)
+
+# Check the final combined dataframe
+str(combined_df)
+
+
+
+
+
 ```
  #10 comparision 2018 GZL and GZB 
  
@@ -511,7 +603,7 @@ ggplot(data = filtered_dataGZLGZB, aes(x = date_time, y = spc, color = station )
 
 ###decided to put all comparision sites together on plots per parameter below is working code, may want to just smooth out the line and tweak the way the plots look but continue to
 
-###ENDED HERE didnt look at any code past this
+
 ```
 
 
@@ -522,6 +614,7 @@ ggplot(data = filtered_dataGZLGZB, aes(x = date_time, y = spc, color = station )
 library(ggplot2)
 ### in order to do QQplots/facet_grid I need to reshape the data into long format
 library(tidyr)
+
 
 # Reshaping data to long format
 combined_df_long <- combined_df %>%
@@ -538,31 +631,15 @@ combined_df_long <- na.omit(combined_df_long)
 
 # Generate QQ Plots
 
-## overall ggplot(combined_df_long, aes(sample = Value)) + 
-##  stat_qq() +
-  ##stat_qq_line(color = "red") +
-  ##facet_grid(Parameter ~ station) +  # Rows: Parameters, Columns: Stations
-  ##labs(
-    ##title = "QQ Plots for Water Quality Data",
-  #  x = "Theoretical Quantiles",
-   # y = "Sample Quantiles"
-  #) +
-  #theme_minimal()
-
-##above was comparing to all parameters to all parameters need to do individual parameters
-## at all stations
-
-
-
 #DO
 # Assuming 'combined_df_long' is your long-format dataframe
 parameter_to_plot <- "dissolvedoxygen"  # Replace with your desired parameter
-
+ 
 # Subset the data for the chosen parameter
 subset_dfDO <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
-
+ 
 # Generate QQ plots for the chosen parameter across all stations
-(ggplot(subset_dfDO, aes(sample = Value)) +
+(qqplotdo <- ggplot(subset_dfDO, aes(sample = Value)) +
   stat_qq() +
   stat_qq_line(color = "red") +
   facet_wrap(~station, scales = "free") +  # One plot per station
@@ -572,8 +649,17 @@ subset_dfDO <- combined_df_long[combined_df_long$Parameter == parameter_to_plot,
     y = "Sample Quantiles"
   ) +
   theme_minimal())
-unique(subset_dfDO$station)
+#unique(subset_dfDO$station)
 
+
+#how to save remaning QQplots change filename and path
+ggsave(plot = qqplotdo, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotdo.svg"),
+       width = 14, height = 10)
+
+```
+
+
+```{r}
 ##SPC
 parameter_to_plot <- "spc"
 subset_dfspc <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
@@ -684,7 +770,7 @@ do.call(grid.arrange, c(plots, ncol = 2))  # Adjust 'ncol' as needed
 
 
 ```{r}
-# Assuming combined_df is your continuous water quality dataframe
+# Assuming final_combined_df is your continuous water quality dataframe
 
 # Define the date range
 start_date <- as.POSIXct("2019-07-01 00:00:00")
@@ -752,7 +838,6 @@ ggplot(gz, aes(x = date_time, y =spc, color = station)) + geom_line() +facet_wra
  trying absolute difference plots   
  
 ```{r}
-
 #get absolute differences trying to mimic code from line 442
 
 # Calculate absolute differences
@@ -780,7 +865,373 @@ ggplot(absolute_diff, aes(x = date_time, y = spc_diff)) + geom_line()
 labs(title = "Percent Differences Over Time",
        x = "Datetime",
        y = "Absolute Difference") +
-  theme_minimal()
+```
+
+
+#Vivian's timeseries code
+
+```{r}
+
+### 15m
+### Start saving graphs with svg files so they're vector-based and not pixel based (for better resolution when zooming in)
+
+
+## Faceted all stations 
+## Note that these are all based off the wide format data. The averaged graphs later are based on long format.
+(pltpHall <- ggplot(data = combined_df, aes(x = date_time, y = ph )) + 
+    geom_line(color = "darkorange") + 
+    labs(x = "Date", y = "pH") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltpHall, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/15m/pH.svg"),
+       width = 14, height = 10)
+
+(pltspcall <- ggplot(data = combined_df, aes(x = date_time, y = spc )) + 
+    geom_line(color = "red") + 
+    labs(x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltspcall, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/15m/spc.svg"),
+       width = 14, height = 10)
+
+(plttempall <- ggplot(data = combined_df, aes(x = date_time, y = watertemperature )) + 
+    geom_line(color = "blue") + 
+    labs(x = "Date", y = "Water Temperature") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = plttempall, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/15m/temp.svg"),
+       width = 14, height = 10)
+
+(pltchlall <- ggplot(data = combined_df, aes(x = date_time, y = fluorescence )) + 
+    geom_line(color = "darkgreen") + 
+    labs(x = "Date", y = "Chlorophyll Fluorescence") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltchlall, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/15m/chl.svg"),
+       width = 14, height = 10)
+
+(pltdoall <- ggplot(data = combined_df, aes(x = date_time, y = dissolvedoxygen )) + 
+    geom_line(color = "purple") + 
+    labs(x = "Date", y = "Dissolved Oxygen") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltdoall, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/15m/do.svg"),
+       width = 14, height = 10)
+
+(pltturball <- ggplot(data = combined_df, aes(x = date_time, y = turbidity )) + 
+    geom_line(color = "brown") + 
+    labs(x = "Date", y = "Turbidity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltturball, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/15m/turb.svg"),
+       width = 14, height = 10)
+
+### Salinity only graphs of gate actions
+
+GateAction1 <- combined_df %>% 
+  filter(station==c("GZL", "GZB"),
+         # This way of filtering stations didn't work in long format, but fine here
+         date_time >=as.Date("2018-08-01"),
+         date_time<=as.Date("2018-09-06"))
+(pltGateAction1spc <- ggplot(data = GateAction1, aes(x = date_time, y = spc )) + 
+    geom_line(color = "red") + 
+    labs(title= "2018 Gate Action", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction1spc, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/15m/GateAction1spc.svg"),
+       width = 14, height = 10)
+
+GateAction2 <- combined_df %>% 
+  filter(date_time >=as.Date("2021-09-01"),
+         date_time<=as.Date("2021-12-24"))
+(pltGateAction2spc <- ggplot(data = GateAction2, aes(x = date_time, y = spc )) + 
+    geom_line(color = "red") + 
+    labs(title= "2021 Gate Action", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction2spc, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/15m/GateAction2spc.svg"),
+       width = 14, height = 10)
+
+GateAction3 <- combined_df %>% 
+  filter(date_time >=as.Date("2022-09-01"),
+         date_time<=as.Date("2023-01-05"))
+(pltGateAction3spc <- ggplot(data = GateAction3, aes(x = date_time, y = spc )) + 
+    geom_line(color = "red") + 
+    labs(title = "2022 Gate Action", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction3spc, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/15m/GateAction3spc.svg"),
+       width = 14, height = 10)
+
+GateAction4 <- combined_df %>% 
+  filter(date_time >=as.Date("2023-08-15"),
+         date_time<=as.Date("2023-10-17"))
+(pltGateAction4spc <- ggplot(data = GateAction4, aes(x = date_time, y = spc )) + 
+    geom_line(color = "red") + 
+    labs(title= "2023 Gate Action", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction4spc, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/15m/GateAction4spc.svg"),
+       width = 14, height = 10)
+
+# This graph isn't working because the data file I'm using doesn't yet have the 2024 data
+GateAction5 <- combined_df %>% 
+  filter(date_time >=as.Date("2024-09-06"),
+         date_time<=as.Date("2024-09-30"))
+(pltGateAction5spc <- ggplot(data = GateAction5, aes(x = date_time, y = spc )) + 
+    geom_line(color = "red") + 
+    labs(title= "2024 Gate Action", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction5spc, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/15m/GateAction5spc.svg"),
+       width = 14, height = 10)
+```
+ 
+```{r}
+
+###1HR
+
+combined_df1h <- combined_df_long %>%
+  # mutate(date = date(date_time), hour = hour(date_time)) %>%
+  mutate(date_hour = ymd_hms(paste0(date(date_time), " ", hour(date_time), ":00:00"))) %>%
+  group_by(date_hour,station,Parameter) %>%
+  summarise(hourlyavg = mean(Value))
+
+
+## Faceted all stations
+(pltpHall1h <- ggplot(data = filter(combined_df1h, Parameter=="ph"), aes(x = date_hour, y = hourlyavg)) + 
+    geom_line(color = "darkorange") + 
+    labs(title = "pH, all stations, 1h avg",x = "Date", y = "pH") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltpHall1h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/1h/pH.svg"),
+       width = 14, height = 10)
+
+(pltspcall1h <- ggplot(data = filter(combined_df1h, Parameter=="spc"), aes(x = date_hour, y = hourlyavg )) + 
+    geom_line(color = "red") + 
+    labs(title = "Salinity, all stations, 1h avg", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltspcall, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/1h/spc.svg"),
+       width = 14, height = 10)
+
+(plttempall1h <- ggplot(data = filter(combined_df1h, Parameter=="watertemperature"), aes(x = date_hour, y = hourlyavg)) + 
+    geom_line(color = "blue") + 
+    labs(title = "Water Temperature, all stations, 1h avg", x = "Date", y = "Water Temperature") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = plttempall, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/1h/temp.svg"),
+       width = 14, height = 10)
+
+(pltchlall1h <- ggplot(data = filter(combined_df1h, Parameter=="fluorescence"), aes(x = date_hour, y =  hourlyavg)) + 
+    geom_line(color = "darkgreen") + 
+    labs(title = "Chlorophyll Fluorescence, all stations, 1h avg", x = "Date", y = "Chlorophyll Fluorescence") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltchlall1h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/1h/chl.svg"),
+       width = 14, height = 10)
+
+(pltdoall1h <- ggplot(data = filter(combined_df1h, Parameter=="dissolvedoxygen"), aes(x = date_hour, y = hourlyavg )) + 
+    geom_line(color = "purple") + 
+    labs(title = "Dissolved Oxygen, all stations, 1h avg", x = "Date", y = "Dissolved Oxygen") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltdoall1h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/1h/do.svg"),
+       width = 14, height = 10)
+
+(pltturball1h <- ggplot(data = filter(combined_df1h, Parameter=="turbidity"), aes(x = date_hour, y = hourlyavg )) + 
+    geom_line(color = "brown") + 
+    labs(x = "Date", y = "Turbidity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltturball1h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/1h/turb.svg"),
+       width = 14, height = 10)
+
+### Salinity only graphs of gate actions
+GateAction1_1h <- combined_df1h %>% 
+  filter(Parameter == "spc",
+         station == "GZL" | station == "GZB",
+         # I found that it didn't like the argument station == c("GZL","GZB") but the above syntax worked
+         date_hour >= as.Date("2018-08-01"),
+         date_hour <= as.Date("2018-09-06"))
+(pltGateAction1spc1h <- ggplot(data = GateAction1_1h, aes(x = date_hour, y = hourlyavg )) + 
+    geom_line(color = "red") + 
+    labs(title= "2018 Gate Action, 1h avg", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction1spc1h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/1h/GateAction1spc.svg"),
+       width = 14, height = 10)
+
+GateAction2_1h <- combined_df1h %>% 
+  filter(Parameter == "spc",
+         date_hour >=as.Date("2021-09-01"),
+         date_hour<=as.Date("2021-12-24"))
+(pltGateAction2spc1h <- ggplot(data = GateAction2_1h, aes(x = date_hour, y = hourlyavg )) + 
+    geom_line(color = "red") + 
+    labs(title= "2021 Gate Action, 1h avg", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction2spc1h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/1h/GateAction2spc.svg"),
+       width = 14, height = 10)
+
+GateAction3_1h <- combined_df1h %>% 
+  filter(Parameter == "spc",
+         date_hour >=as.Date("2022-09-01"),
+         date_hour<=as.Date("2023-01-05"))
+(pltGateAction3spc1h <- ggplot(data = GateAction3_1h, aes(x = date_hour, y = hourlyavg )) + 
+    geom_line(color = "red") + 
+    labs(title = "2022 Gate Action, 1h avg", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction3spc1h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/1h/GateAction3spc.svg"),
+       width = 14, height = 10)
+
+GateAction4_1h <- combined_df1h %>% 
+  filter(Parameter == "spc",
+         date_hour >=as.Date("2023-08-15"),
+         date_hour <=as.Date("2023-10-17"))
+(pltGateAction4spc1h <- ggplot(data = GateAction4_1h, aes(x = date_hour, y = hourlyavg )) + 
+    geom_line(color = "red") + 
+    labs(title= "2023 Gate Action, 1h avg", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction4spc1h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/1h/GateAction4spc.svg"),
+       width = 14, height = 10)
+
+# This graph isn't working because the data file I'm using doesn't yet have the 2024 data
+GateAction5_1h <- combined_df1h %>% 
+  filter(Parameter == "spc",
+         date_hour>=as.Date("2024-09-06"),
+         date_hour<=as.Date("2024-09-30"))
+(pltGateAction5spc1h <- ggplot(data = GateAction5_1h, aes(x = date_hour, y = hourlyavg )) + 
+    geom_line(color = "red") + 
+    labs(title= "2024 Gate Action, 1h avg", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction5spc1h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/1h/GateAction5spc.svg"),
+       width = 14, height = 10)
+```
+ 
+```{r}
+##24
+
+
+combined_df24h <- combined_df_long %>%
+  mutate(date_time = ymd(date_time)) %>%
+  group_by(date_time,station,Parameter) %>%
+  summarise(dailyavg = mean(Value))
+
+
+(pltpHall24h <- ggplot(data = filter(combined_df24h, Parameter=="ph"), aes(x = date_time, y = dailyavg )) + 
+    geom_line(color = "darkorange") + 
+    labs(title = "ph, Daily Averages",x = "Date", y = "pH") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltpHall24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/pH.svg"),
+       width = 14, height = 10)
+
+(pltspcall24h <- ggplot(data = filter(combined_df24h, Parameter=="spc"), aes(x = date_time, y = dailyavg )) + 
+    geom_line(color = "red") + 
+    labs(title="Salinity, Daily Averages", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltspcall24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/spc.svg"),
+       width = 14, height = 10)
+
+(plttempall24h <- ggplot(data = filter(combined_df24h, Parameter=="watertemperature"), aes(x = date_time, y = dailyavg )) + 
+    geom_line(color = "blue") + 
+    labs(title= "Water Temperature, Daily averages", x = "Date", y = "Water Temperature") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = plttempall24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/temp.svg"),
+       width = 14, height = 10)
+
+(pltchlall24h <- ggplot(data = filter(combined_df24h, Parameter == "fluorescence"), aes(x = date_time, y = dailyavg )) + 
+    geom_line(color = "darkgreen") + 
+    labs(title= "Chlorophyll Fluorescence, Daily averages", x = "Date", y = "Chlorophyll Fluorescence") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltchlall24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/chl.svg"),
+       width = 14, height = 10)
+
+(pltdoall24h <- ggplot(data = filter(combined_df24h, Parameter == "dissolvedoxygen"), aes(x = date_time, y = dailyavg )) + 
+    geom_line(color = "purple") + 
+    labs(title= "Dissolved Oxygen, Daily averages", x = "Date", y = "Dissolved Oxygen") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltdoall24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/do.svg"),
+       width = 14, height = 10)
+
+(pltturball24h <- ggplot(data = filter(combined_df24h,Parameter == "turbidity"), aes(x = date_time, y = dailyavg )) + 
+    geom_line(color = "brown") + 
+    labs(title= "Turbidity, Daily averages", x = "Date", y = "Turbidity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltturball24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/turb.svg"),
+       width = 14, height = 10)
+
+### Salinity only graphs of gate actions
+GateAction1_24h <- combined_df24h %>% 
+  filter(Parameter == "spc",
+         station == "GZL" | station == "GZB",
+         date_time >=as.Date("2018-08-01"),
+         date_time<=as.Date("2018-09-06"))
+(pltGateAction1spc24h <- ggplot(data = GateAction1_24h, aes(x = date_time, y = dailyavg )) + 
+    geom_line(color = "red") + 
+    labs(title= "2018 Gate Action", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction1spc24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/GateAction1spc.svg"),
+       width = 14, height = 10)
+
+GateAction2_24h <- combined_df24h %>% 
+  filter(Parameter=="spc",
+         date_time >=as.Date("2021-09-01"),
+         date_time<=as.Date("2021-12-24"))
+(pltGateAction2spc24h <- ggplot(data = GateAction2_24h, aes(x = date_time, y = dailyavg )) + 
+    geom_line(color = "red") + 
+    labs(title= "2021 Gate Action", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction2spc24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/GateAction2spc.svg"),
+       width = 14, height = 10)
+
+GateAction3_24h <- combined_df24h %>% 
+  filter(Parameter=="spc",
+         date_time >=as.Date("2022-09-01"),
+         date_time<=as.Date("2023-01-05"))
+(pltGateAction3spc24h <- ggplot(data = GateAction3_24h, aes(x = date_time, y = dailyavg)) + 
+    geom_line(color = "red") + 
+    labs(title = "2022 Gate Action", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction3spc24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/GateAction3spc.svg"),
+       width = 14, height = 10)
+
+GateAction4_24h <- combined_df24h %>% 
+  filter(Parameter=="spc",
+         date_time >=as.Date("2023-08-15"),
+         date_time<=as.Date("2023-10-17"))
+(pltGateAction4spc24h <- ggplot(data = GateAction4_24h, aes(x = date_time, y = dailyavg )) + 
+    geom_line(color = "red") + 
+    labs(title= "2023 Gate Action", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction4spc24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/GateAction4spc.svg"),
+       width = 14, height = 10)
+
+# This graph isn't working because the data file I'm using doesn't yet have the 2024 data
+GateAction5_24h <- combined_df24h %>% 
+  filter(Parameter=="spc",
+         date_time >=as.Date("2024-09-06"),
+         date_time<=as.Date("2024-09-30"))
+(pltGateAction5spc24h <- ggplot(data = GateAction5_24h, aes(x = date_time, y = dailyavg )) + 
+    geom_line(color = "red") + 
+    labs(title= "2024 Gate Action", x = "Date", y = "Specific Conductivity") + 
+    facet_grid(station~., scales = "free_y")+
+    theme_light())
+ggsave(plot = pltGateAction5spc24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/GateAction5spc.svg"),
+       width = 14, height = 10)
 ```
  
  
