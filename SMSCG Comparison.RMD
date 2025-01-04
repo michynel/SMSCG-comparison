@@ -13,13 +13,14 @@ The comparison will be between: Hunter Cut (HUN)vs Montezuma Buoy (GZM) and Griz
 ```{r}
 ### make sure you have the right libraries installed: tidyverse, etc
 #install.packages("svglite")
+
 ```
 1. libraries 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE, eval=FALSE}
 # Your plotting code here
 
 knitr::opts_chunk$set(fig.show = "hide")
-
+library("forecast")
 library(svglite)
 library(tidyverse)
 library("ggpubr")
@@ -39,8 +40,7 @@ source(here("helpful_functions.R"))
 
 dfGZLediALL <- get_edi_file(1177, "GZL")[[1]]
 
-
-##dfGZLediALL <- dfGZLediALL %>% filter(year(date)>=2018)
+dfGZLediALL <- dfGZLediALL %>% filter(year(date)>=2018)
 
 dfGZBfinal <- abs_path_emp("Water Quality/SMSCG/GZB_final.csv")%>% read.csv(.)
 
@@ -470,7 +470,7 @@ combined_df24 <- bind_rows(GZB24, GZM24, HUN24, GZL24)
 # Check the final column names
 colnames(combined_df24)
 
-##### need to run the NA code
+
 
 ```
 
@@ -560,14 +560,14 @@ str(combined_df)
 
 
 ```
- #10 comparision 2018 GZL and GZB 
+ #10 comparision 2018 GZL and GZB (dont think I need this chunk because VK did all the graphs, will check back)
  
 ```{r}
 library(dplyr)
 library(lubridate)
 library(ggplot2)
 
-str(combined_df)
+
 
 filtered_dataGZL <- combined_df %>% 
   filter(station == "GZL",
@@ -656,14 +656,10 @@ subset_dfDO <- combined_df_long[combined_df_long$Parameter == parameter_to_plot,
 ggsave(plot = qqplotdo, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotdo.svg"),
        width = 14, height = 10)
 
-```
-
-
-```{r}
 ##SPC
 parameter_to_plot <- "spc"
 subset_dfspc <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
-(ggplot(subset_dfspc, aes(sample = Value)) +
+(qqplotspc <- ggplot(subset_dfspc, aes(sample = Value)) +
   stat_qq() +
   stat_qq_line(color = "red") +
   facet_wrap(~station, scales = "free") +  # One plot per station
@@ -674,12 +670,14 @@ subset_dfspc <- combined_df_long[combined_df_long$Parameter == parameter_to_plot
   ) +
   theme_minimal())
 unique(subset_dfDO$station)
-
+#save
+ggsave(plot = qqplotspc, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotspc.svg"),
+       width = 14, height = 10)
 
 #ph
 parameter_to_plot <- "ph"
 subset_dfph <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
-(ggplot(subset_dfph, aes(sample = Value)) +
+(qqplotph <-ggplot(subset_dfph, aes(sample = Value)) +
   stat_qq() +
   stat_qq_line(color = "red") +
   facet_wrap(~station, scales = "free") +  # One plot per station
@@ -689,11 +687,14 @@ subset_dfph <- combined_df_long[combined_df_long$Parameter == parameter_to_plot,
     y = "Sample Quantiles"
   ) +
   theme_minimal())
+#save
+ggsave(plot = qqplotph, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotph.svg"),
+       width = 14, height = 10)
 
 #fluor
 parameter_to_plot <- "fluorescence"
 subset_dfflu <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
-(ggplot(subset_dfflu, aes(sample = Value)) +
+(qqplotfluor <-ggplot(subset_dfflu, aes(sample = Value)) +
   stat_qq() +
   stat_qq_line(color = "red") +
   facet_wrap(~station, scales = "free") +  # One plot per station
@@ -703,12 +704,15 @@ subset_dfflu <- combined_df_long[combined_df_long$Parameter == parameter_to_plot
     y = "Sample Quantiles"
   ) +
   theme_minimal())
+#save
+ggsave(plot = qqplotfluor, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotfluor.svg"),
+       width = 14, height = 10)
 
 
 ##turb
 parameter_to_plot <- "turbidity"
 subset_dfturb <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
-(ggplot(subset_dfflu, aes(sample = Value)) +
+(qqplotturb <-ggplot(subset_dfflu, aes(sample = Value)) +
   stat_qq() +
   stat_qq_line(color = "red") +
   facet_wrap(~station, scales = "free") +  # One plot per station
@@ -718,11 +722,14 @@ subset_dfturb <- combined_df_long[combined_df_long$Parameter == parameter_to_plo
     y = "Sample Quantiles"
   ) +
   theme_minimal())
+#save
+ggsave(plot = qqplotturb, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotturb.svg"),
+       width = 14, height = 10)
 
 #water temp 
 parameter_to_plot <- "watertemperature"
 subset_dfWT <- combined_df_long[combined_df_long$Parameter == parameter_to_plot, ]
-(ggplot(subset_dfflu, aes(sample = Value)) +
+(qqplotWT <-ggplot(subset_dfflu, aes(sample = Value)) +
   stat_qq() +
   stat_qq_line(color = "red") +
   facet_wrap(~station, scales = "free") +  # One plot per station
@@ -733,142 +740,46 @@ subset_dfWT <- combined_df_long[combined_df_long$Parameter == parameter_to_plot,
   ) +
   theme_minimal())
 
+#save
+ggsave(plot = qqplotWT, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotWT.svg"),
+       width = 14, height = 10)
 
 
-## here is a code for all do not like the scale though
+
+## here is a code for all do not like the scale though decided to keep out
 # Parameters to compare
-parameters <- c("dissolvedoxygen", "watertemperature", "turbidity", "ph", "spc", "fluorescence")  # List of parameters to plot
+#parameters <- c("dissolvedoxygen", "watertemperature", "turbidity", "ph", "spc", "fluorescence")  # List of parameters to plot
 
 # Create a list of plots for each parameter
-plots <- lapply(parameters, function(param) {
+#plots <- lapply(parameters, function(param) {
   # Subset data for each parameter
-  subset_df <- combined_df_long[combined_df_long$Parameter == param, ]
+ # subset_df <- combined_df_long[combined_df_long$Parameter == param, ]
   
   # Generate QQ plots for the chosen parameter across all stations
-  ggplot(subset_df, aes(sample = Value)) +
-    stat_qq() +
-    stat_qq_line(color = "red") +
-    facet_wrap(~station, scales = "free") +  # One plot per station
-    labs(
-      title = paste("QQ Plots for", param),
-      x = "Theoretical Quantiles",
-      y = "Sample Quantiles"
-    ) +
-    theme_minimal()
-})
+ #qqplotALL<- ggplot(subset_df, aes(sample = Value)) +
+  #  stat_qq() +
+   # stat_qq_line(color = "red") +
+    #facet_wrap(~station, scales = "free") +  # One plot per station
+    #labs(
+     # title = paste("QQ Plots for", param),
+      #x = "Theoretical Quantiles",
+      #y = "Sample Quantiles"
+    #) +
+  #  theme_minimal()
+#})
 
 # Combine all the plots into a single grid for easy viewing
-library(gridExtra)
-do.call(grid.arrange, c(plots, ncol = 2))  # Adjust 'ncol' as needed
+#library(gridExtra)
+#do.call(grid.arrange, c(plots, ncol = 2))  # Adjust 'ncol' as needed
 
-
+#ggsave(plot = qqplotALL, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotALL.svg"),
+       #width = 14, height = 10)
 
 
 ```
 
 
-
-
-```{r}
-# Assuming final_combined_df is your continuous water quality dataframe
-
-# Define the date range
-start_date <- as.POSIXct("2019-07-01 00:00:00")
-end_date <- as.POSIXct("2019-10-07 23:59:59")
-
-# Filter data within the specified date range and for the selected stations
-filtered_data <- combined_df %>%
-  filter(date_time >= start_date & date_time <= end_date &
-         station %in% c("GZB", "GZL"))
-
-# Calculate percent differences for selected columns
-percent_diff <- filtered_data %>%
-  group_by(date_time) %>%
-  summarize(
-    do_diff = (first(dissolvedoxygen)-last(dissolvedoxygen))/first(dissolvedoxygen),
-    spc_diff = (first(spc)-last(spc))/first(spc),
-    ph_diff = (first(ph)-last(ph))/first(ph),
-    temp_diff = (first(watertemperature)-last(watertemperature))/first(watertemperature),
-    turbidity_diff = (first(turbidity)-last(turbidity))/first(turbidity),
-    fluorescence_diff = (first(fluorescence)-last(fluorescence))/first(fluorescence)
-  )
-
-# Display the percent differences
-print(percent_diff)
-view(percent_diff)
-# Load the necessary library if not already loaded
-# install.packages("ggplot2")
-library(ggplot2)
-
-# Assuming percent_diff is the data frame containing percent differences
-
-# Melt the data for better plotting
-melted_data <- tidyr::gather(percent_diff, parameter, percent_diff, -date_time)
-
-view(melted_data)
-# Create a line plot
-ggplot(melted_data, aes(x = date_time, y = percent_diff,)) +
-  geom_line() +
-  facet_wrap(~parameter, scales = "free_y") +
-  labs(title = "Percent Differences Over Time",
-       x = "Datetime",
-       y = "Percent Difference") +
-  theme_minimal()
-
-
-### plot data with just both stations
-ggplot(combined_df, aes(x = date_time, y= watertemperature, color = station)) + geom_line()
-ggplot(combined_df, aes(x = date_time, y= spc, color = station)) + geom_line()
-
-
-### 
-gz = filter(combined_df, station%in%c("GZB", "GZL"))
-
-gz = mutate(gz, year = year(date_time)) %>% 
-  filter(!is.na(year))
-
-ggplot(gz, aes(x = date_time, y =watertemperature, color = station)) + geom_line() +facet_wrap(~year, scales = "free_x")
-
-ggplot(gz, aes(x = date_time, y =spc, color = station)) + geom_line() +facet_wrap(~year, scales = "free_x")
-```
-```{r}
-## plot absolute differences and zoom on time periods all exploratory plots, when you see signals like spc investigate what times of the time more likely to be different, times of the day, times of day for certain parameters and seasonally and then include when gate actions are in effects not
-
-```
- trying absolute difference plots   
- 
-```{r}
-#get absolute differences trying to mimic code from line 442
-
-# Calculate absolute differences
-absolute_diff <- filtered_data %>%
-  group_by(date_time) %>%
-  summarize(
-    do_diff = abs(first(dissolvedoxygen) - last(dissolvedoxygen)),
-    spc_diff = abs(first(spc) - last(spc)),
-    ph_diff = abs(first(ph) - last(ph)),
-    temp_diff = abs(first(watertemperature) - last(watertemperature)),
-    turbidity_diff = abs(first(turbidity) - last(turbidity)),
-    fluorescence_diff = abs(first(fluorescence) - last(fluorescence))
-  )
-
-
-print(absolute_diff)
-##not sure what melting the data does but did it before for 'better plotting' 
-melted_data_ab <- tidyr::gather(absolute_diff, parameter, absolute_diff, -date_time)
-view(melted_data_ab)
-
-
-#filter dataset for 1st gate action in 2018 one month before and after
-
-ggplot(absolute_diff, aes(x = date_time, y = spc_diff)) + geom_line()
-labs(title = "Percent Differences Over Time",
-       x = "Datetime",
-       y = "Absolute Difference") +
-```
-
-
-#Vivian's timeseries code
+#12 Vivian's timeseries code 15m, 1HR, 24HR
 
 ```{r}
 
@@ -1233,5 +1144,213 @@ GateAction5_24h <- combined_df24h %>%
 ggsave(plot = pltGateAction5spc24h, filename = abs_path_emp("Water Quality/SMSCG/TimeSeriesGraphs/24h/GateAction5spc.svg"),
        width = 14, height = 10)
 ```
+#13 ACF/PACF
+
+```{r}
+# Load required libraries
+library(dplyr)
+library(ggplot2)
+library(forecast)
+
+
+# Function to generate ACF and PACF plots
+plot_acf_pacf <- function(data, station, parameter) {
+  ts_data <- data %>%
+    filter(station == station) %>%
+    arrange(date_time) %>%
+    pull({{ parameter }})
+  
+  ts_obj <- ts(ts_data)  # Convert to time series object
+  
+  # ACF plot
+  acf_plot <- ggAcf(ts_obj) + 
+    ggtitle(paste("ACF -", station, parameter, "- 15min")) +
+    theme_minimal()
+  
+  # PACF plot
+  pacf_plot <- ggPacf(ts_obj) + 
+    ggtitle(paste("PACF -", station, parameter, "- 15min")) +
+    theme_minimal()
+  
+  list(ACF = acf_plot, PACF = pacf_plot)
+}
+
+# Parameters and stations
+parameters <- c("dissolvedoxygen", "spc", "ph", "watertemperature", "turbidity", "fluorescence")
+stations <- unique(combined_df$station)
+
+# Loop through stations and parameters
+for (station in stations) {
+  for (parameter in parameters) {
+    # Generate plots
+    plots <- plot_acf_pacf(combined_df, station, parameter)
+    
+    # Print plots to screen
+    print(plots$ACF)
+    print(plots$PACF)
+  }
+}
+
+############  24h #################
+
+# Set desktop save path explicitly
+desktop_path <- "C:/Users/nelsonm/Desktop/ACF_PACF_Plots"
+
+# Create the directory
+dir.create(desktop_path, showWarnings = TRUE, recursive = TRUE)
+
+# Print the path to verify
+print(desktop_path)
+
+
+# Function to generate ACF and PACF plots
+plot_acf_pacf <- function(data, station, parameter) {
+  ts_data <- data %>%
+    filter(station == station) %>%
+    arrange(date_time) %>%
+    pull({{ parameter }})
+  
+  ts_obj <- ts(ts_data)  # Convert to time series object
+  
+  # ACF plot
+  acf_plot <- ggAcf(ts_obj) + 
+    ggtitle(paste("ACF -", station, parameter, "- 24h")) +
+    theme_minimal()
+  
+  # PACF plot
+  pacf_plot <- ggPacf(ts_obj) + 
+    ggtitle(paste("PACF -", station, parameter, "- 24h")) +
+    theme_minimal()
+  
+  list(ACF = acf_plot, PACF = pacf_plot)
+}
+
+# Parameters and stations
+parameters <- c("dissolvedoxygen", "spc", "ph", "watertemperature", "turbidity", "fluorescence")
+stations <- unique(combined_df24$station)
+
+
+# Loop through stations and parameters
+for (station in stations) {
+  for (parameter in parameters) {
+    # Generate plots
+    plots <- plot_acf_pacf(combined_df24, station, parameter)
+    
+    # Print plots to screen
+    print(plots$ACF)
+    print(plots$PACF)
+    
+   acf_file <- file.path(desktop_path, paste0("ACF_", station, "_", parameter, ".svg"))
+    pacf_file <- file.path(desktop_path, paste0("PACF_", station, "_", parameter, ".svg"))
+    ggsave(acf_file, plots$ACF, width = 14, height =10)
+    ggsave(pacf_file, plots$PACF, width = 14, height = 10)
+  }
+}
+
+
+
+```
+
+#14 absolute diff plots
+```{r}
+
+
+#Absolute diff plots tried way back with Rosie
+
+# Assuming final_combined_df is your continuous water quality dataframe
+
+# Define the date range
+start_date <- as.POSIXct("2019-07-01 00:00:00")
+end_date <- as.POSIXct("2019-10-07 23:59:59")
+
+# Filter data within the specified date range and for the selected stations
+filtered_data <- combined_df %>%
+  filter(date_time >= start_date & date_time <= end_date &
+         station %in% c("GZB", "GZL"))
+
+# Calculate percent differences for selected columns
+percent_diff <- filtered_data %>%
+  group_by(date_time) %>%
+  summarize(
+    do_diff = (first(dissolvedoxygen)-last(dissolvedoxygen))/first(dissolvedoxygen),
+    spc_diff = (first(spc)-last(spc))/first(spc),
+    ph_diff = (first(ph)-last(ph))/first(ph),
+    temp_diff = (first(watertemperature)-last(watertemperature))/first(watertemperature),
+    turbidity_diff = (first(turbidity)-last(turbidity))/first(turbidity),
+    fluorescence_diff = (first(fluorescence)-last(fluorescence))/first(fluorescence)
+  )
+
+# Display the percent differences
+print(percent_diff)
+view(percent_diff)
+# Load the necessary library if not already loaded
+# install.packages("ggplot2")
+library(ggplot2)
+
+# Assuming percent_diff is the data frame containing percent differences
+
+# Melt the data for better plotting
+melted_data <- tidyr::gather(percent_diff, parameter, percent_diff, -date_time)
+
+view(melted_data)
+# Create a line plot
+ggplot(melted_data, aes(x = date_time, y = percent_diff,)) +
+  geom_line() +
+  facet_wrap(~parameter, scales = "free_y") +
+  labs(title = "Percent Differences Over Time",
+       x = "Datetime",
+       y = "Percent Difference") +
+  theme_minimal()
+
+
+### plot data with just both stations
+ggplot(combined_df, aes(x = date_time, y= watertemperature, color = station)) + geom_line()
+ggplot(combined_df, aes(x = date_time, y= spc, color = station)) + geom_line()
+
+
+### 
+gz = filter(combined_df, station%in%c("GZB", "GZL"))
+
+gz = mutate(gz, year = year(date_time)) %>% 
+  filter(!is.na(year))
+
+ggplot(gz, aes(x = date_time, y =watertemperature, color = station)) + geom_line() +facet_wrap(~year, scales = "free_x")
+
+ggplot(gz, aes(x = date_time, y =spc, color = station)) + geom_line() +facet_wrap(~year, scales = "free_x")
+
+## plot absolute differences and zoom on time periods all exploratory plots, when you see signals like spc investigate what times of the time more likely to be different, times of the day, times of day for certain parameters and seasonally and then include when gate actions are in effects not
+
+# trying absolute difference plots   
  
- 
+
+#get absolute differences trying to mimic code from line 442
+
+# Calculate absolute differences
+absolute_diff <- filtered_data %>%
+  group_by(date_time) %>%
+  summarize(
+    do_diff = abs(first(dissolvedoxygen) - last(dissolvedoxygen)),
+    spc_diff = abs(first(spc) - last(spc)),
+    ph_diff = abs(first(ph) - last(ph)),
+    temp_diff = abs(first(watertemperature) - last(watertemperature)),
+    turbidity_diff = abs(first(turbidity) - last(turbidity)),
+    fluorescence_diff = abs(first(fluorescence) - last(fluorescence))
+  )
+
+
+print(absolute_diff)
+##not sure what melting the data does but did it before for 'better plotting' 
+melted_data_ab <- tidyr::gather(absolute_diff, parameter, absolute_diff, -date_time)
+view(melted_data_ab)
+
+
+#filter dataset for 1st gate action in 2018 one month before and after
+
+ggplot(absolute_diff, aes(x = date_time, y = spc_diff)) + geom_line()
+labs(title = "Percent Differences Over Time",
+       x = "Datetime",
+       y = "Absolute Difference") +
+```
+
+
+```{r}
