@@ -607,7 +607,7 @@ ggplot(data = filtered_dataGZLGZB, aes(x = date_time, y = spc, color = station )
 ```
 
 
-#11 QQPLOTS per parameter for each station
+#11 QQPLOTS per parameter for each station 15m
 
 ```{r}
 # Load ggplot2 library
@@ -746,38 +746,281 @@ ggsave(plot = qqplotWT, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqp
 
 
 
-## here is a code for all do not like the scale though decided to keep out
-# Parameters to compare
-#parameters <- c("dissolvedoxygen", "watertemperature", "turbidity", "ph", "spc", "fluorescence")  # List of parameters to plot
+```
 
-# Create a list of plots for each parameter
-#plots <- lapply(parameters, function(param) {
-  # Subset data for each parameter
- # subset_df <- combined_df_long[combined_df_long$Parameter == param, ]
-  
+QQplots 1 hr averaged
+```{r}
+
+library(ggplot2)
+
+# Define the parameter you want to plot
+parameter_to_plot <- "dissolvedoxygen"
+
+# Subset the data for the chosen parameter
+subset_dfDO <- combined_df1h[combined_df1h$Parameter == parameter_to_plot, ]
+
+# Check if the subset contains data
+if (nrow(subset_dfDO) > 0) {
   # Generate QQ plots for the chosen parameter across all stations
- #qqplotALL<- ggplot(subset_df, aes(sample = Value)) +
-  #  stat_qq() +
-   # stat_qq_line(color = "red") +
-    #facet_wrap(~station, scales = "free") +  # One plot per station
-    #labs(
-     # title = paste("QQ Plots for", param),
-      #x = "Theoretical Quantiles",
-      #y = "Sample Quantiles"
-    #) +
-  #  theme_minimal()
-#})
+  qqplotdo1hr <- ggplot(subset_dfDO, aes(sample = hourlyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+  print(qqplotdo1hr)
+} else {
+  warning("The subset for the chosen parameter is empty. Check your data or parameter name.")
+}
 
-# Combine all the plots into a single grid for easy viewing
-#library(gridExtra)
-#do.call(grid.arrange, c(plots, ncol = 2))  # Adjust 'ncol' as needed
 
-#ggsave(plot = qqplotALL, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotALL.svg"),
-       #width = 14, height = 10)
+#how to save remaning QQplots change filename and path
+ggsave(plot = qqplotdo1hr, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotdo1hr.svg"),
+       width = 14, height = 10)
+
+##SPC
+parameter_to_plot <- "spc"
+subset_dfspc <- combined_df1h[combined_df1h$Parameter == parameter_to_plot, ]
+qqplotspc1hr <- ggplot(subset_dfspc, aes(sample = hourlyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+  print(qqplotdo1hr)
+} else {
+  warning("The subset for the chosen parameter is empty. Check your data or parameter name.")
+}
+
+ggsave(plot = qqplotspc1hr, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotspc1hr.svg"),
+       width = 14, height = 10)
+
+#ph
+parameter_to_plot <- "ph"
+subset_dfph <- combined_df1h[combined_df1h$Parameter == parameter_to_plot, ]
+qqplotph1hr <- ggplot(subset_dfph, aes(sample = hourlyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+  print(qqplotph1hr)
+} else {
+  warning("The subset for the chosen parameter is empty. Check your data or parameter name.")
+}
+
+#save
+ggsave(plot = qqplotph1hr, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotph1h.svg"),
+       width = 14, height = 10)
+
+#fluor
+parameter_to_plot <- "fluorescence"
+subset_dfflu <- combined_df1h[combined_df1h$Parameter == parameter_to_plot, ]
+qqplotflu1h <- ggplot(subset_dfflu, aes(sample = hourlyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+ 
+#save
+ggsave(plot = qqplotflu1h, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotfluor1h.svg"),
+       width = 14, height = 10)
+
+
+##turb
+parameter_to_plot <- "turbidity"
+subset_dfturb <- combined_df1h[combined_df1h$Parameter == parameter_to_plot, ]
+qqplotturb1h <- ggplot(subset_dfturb, aes(sample = hourlyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+ 
+#save
+ggsave(plot = qqplotturb1h, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotturb1h.svg"),
+       width = 14, height = 10)
+
+#water temp 
+parameter_to_plot <- "watertemperature"
+subset_dfWT <- combined_df1h[combined_df1h$Parameter == parameter_to_plot, ]
+qqplotwt1h <- ggplot(subset_dfWT, aes(sample = hourlyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+
+#save
+ggsave(plot = qqplotwt1h, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotWT1h.svg"),
+       width = 14, height = 10)
 
 
 ```
 
+
+24hr averaged QQplots
+```{r}
+###missing or NA values
+combined_df24h <- na.omit(combined_df24h)
+
+# Generate QQ plots for the chosen parameter across all stations
+#DO
+# Define the parameter you want to plot
+parameter_to_plot <- "dissolvedoxygen"
+
+# Subset the data for the chosen parameter
+subset_dfDO24h <- combined_df24h[combined_df24h$Parameter == parameter_to_plot, ]
+
+  # Generate QQ plots for the chosen parameter across all stations
+  qqplotdo24hr <- ggplot(subset_dfDO24h, aes(sample = dailyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+print(qqplotdo24hr)
+ggsave(plot = qqplotdo24hr, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotdo24hr.svg"),
+       width = 14, height = 10)
+
+#spc
+# Define the parameter you want to plot
+parameter_to_plot <- "spc"
+
+# Subset the data for the chosen parameter
+subset_dfspc24h <- combined_df24h[combined_df24h$Parameter == parameter_to_plot, ]
+
+  # Generate QQ plots for the chosen parameter across all stations
+  qqplotspc24hr <- ggplot(subset_dfspc24h, aes(sample = dailyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+
+ggsave(plot = qqplotspc24hr, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotspc24hr.svg"),
+       width = 14, height = 10)
+
+# Define the parameter you want to plot
+parameter_to_plot <- "ph"
+
+# Subset the data for the chosen parameter
+subset_dfph24h <- combined_df24h[combined_df24h$Parameter == parameter_to_plot, ]
+
+  # Generate QQ plots for the chosen parameter across all stations
+  qqplotph24hr <- ggplot(subset_dfph24h, aes(sample = dailyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+
+ggsave(plot = qqplotph24hr, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotph24hr.svg"),
+       width = 14, height = 10)
+
+#fluorescence
+# Define the parameter you want to plot
+parameter_to_plot <- "fluorescence"
+
+# Subset the data for the chosen parameter
+subset_dfflu24h <- combined_df24h[combined_df24h$Parameter == parameter_to_plot, ]
+
+  # Generate QQ plots for the chosen parameter across all stations
+  qqplotflu24hr <- ggplot(subset_dfflu24h, aes(sample = dailyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+
+ggsave(plot = qqplotflu24hr, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotflu24hr.svg"),
+       width = 14, height = 10)
+
+
+##turb
+# Define the parameter you want to plot
+parameter_to_plot <- "turbidity"
+
+# Subset the data for the chosen parameter
+subset_dfturb24h <- combined_df24h[combined_df24h$Parameter == parameter_to_plot, ]
+
+  # Generate QQ plots for the chosen parameter across all stations
+  qqplotturb24hr <- ggplot(subset_dfturb24h, aes(sample = dailyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+
+ggsave(plot = qqplotturb24hr, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotturb24hr.svg"),
+       width = 14, height = 10)
+
+###didnt work###
+#watertemp
+parameter_to_plot <- "watertemperature"
+subset_dfWT24h <- combined_df24h[combined_df24h$Parameter == parameter_to_plot, ]
+qqplotwt24h <- ggplot(subset_dfWT24h, aes(sample = dailyavg)) +
+    stat_qq() +
+    stat_qq_line(color = "red") +
+    facet_wrap(~station, scales = "free") +  # One plot per station
+    labs(
+      title = paste("QQ Plots for", parameter_to_plot),
+      x = "Theoretical Quantiles",
+      y = "Sample Quantiles"
+    ) +
+    theme_minimal()
+print(qqplotwt24h)
+#save
+ggsave(plot = qqplotwt24h, filename = abs_path_emp("Water Quality/SMSCG/QQplots/qqplotWT24h.svg"),
+       width = 14, height = 10)
+
+
+```
 
 #12 Vivian's timeseries code 15m, 1HR, 24HR
 
